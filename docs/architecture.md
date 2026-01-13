@@ -39,7 +39,7 @@
 │                    External Systems                             │
 ├─────────────────────────────┬───────────────────────────────────┤
 │  Kubernetes Cluster         │   Azure AI Foundry Local          │
-│  (k3s local / AKS Arc)      │   http://127.0.0.1:58366          │
+│  (k3s local / AKS Arc)      │   Local AI Endpoint             │
 │  - Pods, Deployments        │   Model: qwen2.5-0.5b             │
 │  - Services, Events         │                                   │
 │  - Logs, Metrics            │                                   │
@@ -229,9 +229,9 @@
 
 ## Security Considerations
 
-### Week 1 MVP (Simplified Security)
+### Development Environment
 
-- **No authentication**: Open access for local development
+- **No authentication**: Simplified for local development
 - **RBAC**: ServiceAccount with minimal required permissions
 - **Network**: Backend only accessible within cluster
 - **Secrets**: Foundry endpoint configured via environment variables
@@ -263,7 +263,7 @@
 
 ### Scaling Considerations
 
-- **Single replica**: Week 1 MVP runs single backend pod
+- **Single replica**: Initial implementation runs single backend pod
 - **Stateless design**: Easy to scale horizontally in future
 - **Shared context**: Future enhancement with Redis/shared cache
 - **Load testing**: Target 10 concurrent users for MVP
@@ -299,7 +299,7 @@
 
 ## Future Architecture Enhancements
 
-### Post-Week 1 Considerations
+### Planned Features
 
 1. **Persistent Storage**
    - Add PostgreSQL/TimescaleDB for historical data

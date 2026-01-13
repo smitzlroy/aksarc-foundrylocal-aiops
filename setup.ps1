@@ -73,8 +73,8 @@ if (-not (Test-Path "backend\.env")) {
     Write-Host "📝 Creating .env file..." -ForegroundColor Yellow
     @"
 # Foundry Local Configuration
-FOUNDRY_ENDPOINT=http://127.0.0.1:58366
-FOUNDRY_MODEL=qwen2.5-0.5b
+FOUNDRY_ENDPOINT=http://localhost:8000
+FOUNDRY_MODEL=your-model-name
 
 # API Configuration
 API_HOST=0.0.0.0

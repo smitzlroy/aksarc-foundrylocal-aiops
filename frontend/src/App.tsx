@@ -10,14 +10,11 @@ function App(): JSX.Element {
           {message}
         </h1>
         <p className="text-dark-600 text-lg">
-          Week 1 MVP - Foundation is being built...
+          Local AI-powered Kubernetes operations assistant
         </p>
         <div className="mt-8 p-4 bg-dark-50 rounded-lg border border-primary-500">
           <p className="text-sm text-dark-700">
-            🚀 <strong>Status:</strong> Project structure initialized
-          </p>
-          <p className="text-sm text-dark-700 mt-2">
-            🔧 <strong>Next:</strong> Backend API and Kubernetes integration
+            🚀 <strong>Status:</strong> Foundation complete, features in development
           </p>
         </div>
       </div>

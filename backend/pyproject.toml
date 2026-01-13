@@ -8,9 +8,6 @@ version = "0.1.0"
 description = "AI Operations Assistant for Azure AKS Arc clusters powered by Foundry Local"
 readme = "README.md"
 requires-python = ">=3.11"
-authors = [
-    {name = "smitzlroy"}
-]
 dependencies = [
     "fastapi>=0.109.0",
     "uvicorn[standard]>=0.27.0",

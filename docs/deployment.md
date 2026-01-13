@@ -68,8 +68,8 @@ backend:
       memory: 2Gi
   
   foundry:
-    endpoint: "http://127.0.0.1:58366"
-    model: "qwen2.5-0.5b"
+    endpoint: "http://localhost:<port>"
+    model: "<model-name>"
   
   context:
     bufferHours: 2

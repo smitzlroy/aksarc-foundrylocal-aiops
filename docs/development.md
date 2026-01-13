@@ -25,7 +25,7 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/smitzlroy/aksarc-foundrylocal-aiops.git
+git clone https://github.com/<your-username>/aksarc-foundrylocal-aiops.git
 cd aksarc-foundrylocal-aiops
 
 # Create Python virtual environment
@@ -63,8 +63,8 @@ Create `.env` file in `backend/` directory:
 
 ```env
 # Foundry Local Configuration
-FOUNDRY_ENDPOINT=http://127.0.0.1:58366
-FOUNDRY_MODEL=qwen2.5-0.5b
+FOUNDRY_ENDPOINT=http://localhost:<your-port>
+FOUNDRY_MODEL=<your-model>
 
 # Kubernetes Configuration (optional, uses default kubeconfig)
 # KUBECONFIG=/path/to/kubeconfig
@@ -76,7 +76,7 @@ LOG_FORMAT=json
 # API Configuration
 API_HOST=0.0.0.0
 API_PORT=8000
-CORS_ORIGINS=http://localhost:3000
+CORS_ORIGINS=http://localhost:<frontend-port>
 
 # Context Buffer Configuration
 CONTEXT_BUFFER_HOURS=2
@@ -576,10 +576,8 @@ mypy src/  # See specific errors
 ### Branch Strategy
 
 - `main`: Production-ready code
-- `develop`: Integration branch (future)
-- `feature/*`: Feature branches (future)
-
-For Week 1 MVP, commit directly to `main` with proper commit messages.
+- `develop`: Integration branch
+- `feature/*`: Feature branches
 
 ### Commit Message Format
 

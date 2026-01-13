@@ -28,8 +28,8 @@ class FoundryClient:
 
     def __init__(
         self,
-        endpoint: str = "http://127.0.0.1:58366",
-        model: str = "qwen2.5-0.5b",
+        endpoint: str = "http://localhost:8000",
+        model: str = "your-model",
         timeout: float = 30.0,
     ) -> None:
         """Initialize Foundry client.
@@ -225,12 +225,19 @@ async def test_foundry_connection() -> None:
     the full application.
     """
     print("🔍 Testing Foundry Local connection...")
-    print(f"📍 Endpoint: http://127.0.0.1:58366")
-    print(f"🤖 Model: qwen2.5-0.5b\n")
+    print("Configure your endpoint and model in .env file\n")
+
+    # Read from environment or use defaults
+    import os
+    endpoint = os.getenv("FOUNDRY_ENDPOINT", "http://localhost:8000")
+    model = os.getenv("FOUNDRY_MODEL", "your-model")
+
+    print(f"📍 Endpoint: {endpoint}")
+    print(f"🤖 Model: {model}\n")
 
     client = FoundryClient(
-        endpoint="http://127.0.0.1:58366",
-        model="qwen2.5-0.5b",
+        endpoint=endpoint,
+        model=model,
         timeout=30.0,
     )
 
@@ -270,8 +277,8 @@ async def test_foundry_connection() -> None:
         print(f"❌ Connection Error: {e}")
         print("\nTroubleshooting:")
         print("1. Verify Foundry Local is running")
-        print("2. Check endpoint URL is correct")
-        print("3. Ensure no firewall is blocking port 58366")
+        print("2. Check endpoint URL is correct in .env")
+        print("3. Ensure no firewall is blocking the connection")
 
     except FoundryTimeoutError as e:
         print(f"❌ Timeout Error: {e}")

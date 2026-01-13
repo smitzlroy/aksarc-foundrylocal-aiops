@@ -24,11 +24,11 @@ class Settings(BaseSettings):
 
     # Foundry Local Configuration
     foundry_endpoint: str = Field(
-        default="http://127.0.0.1:58366",
+        default="http://localhost:8000",
         description="Foundry Local endpoint URL",
     )
     foundry_model: str = Field(
-        default="qwen2.5-0.5b",
+        default="your-model-name",
         description="Foundry model to use",
     )
     foundry_timeout: float = Field(

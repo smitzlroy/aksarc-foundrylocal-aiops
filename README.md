@@ -10,39 +10,33 @@ This project provides a natural language interface for Kubernetes operators to i
 
 ## Key Features
 
-### Week 1 MVP Features
-
-- ✅ **Project Foundation**: Complete tooling, linting, testing infrastructure
 - 🔄 **Natural Language Q&A**: Ask questions about your cluster in plain English
 - 🔄 **Real-time Monitoring**: Watches logs, events, and metrics from Kubernetes
-- 🔄 **Local AI Processing**: All AI inference via Azure AI Foundry Local (qwen2.5-0.5b)
+- 🔄 **Local AI Processing**: All AI inference via Azure AI Foundry Local
 - 🔄 **Modern Web UI**: Clean, responsive chat interface with status cards
 - 🔄 **Production-Ready Code**: Type hints, tests, structured logging throughout
 - 🔄 **Easy Deployment**: Helm chart for deployment to any Kubernetes cluster
 
-### Explicitly Out of Scope (Week 1)
+### Future Enhancements
 
-- ❌ Historical data storage (database)
-- ❌ Predictions/forecasting
-- ❌ Multi-cluster support
-- ❌ User authentication
-- ❌ Complex dashboards
-- ❌ CLI tool
+- Historical data storage and analytics
+- Multi-cluster support
+- Advanced security features
+- CLI tool for power users
 
 ## Architecture
 
 ```
 ┌──────────────┐         ┌──────────────┐         ┌──────────────┐
 │   React UI   │────────▶│   FastAPI    │────────▶│  Kubernetes  │
-│  (Port 3000) │ WS/HTTP │  (Port 8000) │  K8s API│   Cluster    │
+│              │ WS/HTTP │              │  K8s API│   Cluster    │
 └──────────────┘         └──────┬───────┘         └──────────────┘
                                 │
                                 │ HTTP
                                 ▼
                          ┌──────────────┐
                          │ Foundry Local│
-                         │ (Port 58366) │
-                         │ qwen2.5-0.5b │
+                         │   AI Model   │
                          └──────────────┘
 ```
 
@@ -58,7 +52,7 @@ This project provides a natural language interface for Kubernetes operators to i
 
 - **Python 3.11+**: Backend development
 - **Node.js 18+**: Frontend development
-- **Azure AI Foundry Local**: Running at http://127.0.0.1:58366
+- **Azure AI Foundry Local**: Running locally
 - **Docker Desktop** or **k3s**: Local Kubernetes cluster
 - **kubectl**: Kubernetes CLI configured
 - **Git**: Version control
@@ -75,7 +69,7 @@ This project provides a natural language interface for Kubernetes operators to i
 
 ```powershell
 # Clone repository
-git clone https://github.com/smitzlroy/aksarc-foundrylocal-aiops.git
+git clone https://github.com/<your-username>/aksarc-foundrylocal-aiops.git
 cd aksarc-foundrylocal-aiops
 
 # Run automated setup (Windows)
@@ -92,11 +86,11 @@ npm install
 
 ### 2. Configure Environment
 
-The setup script creates `backend\.env` with defaults. Verify Foundry endpoint:
+The setup script creates `backend\.env` with defaults. Configure your Foundry endpoint:
 
 ```env
-FOUNDRY_ENDPOINT=http://127.0.0.1:58366
-FOUNDRY_MODEL=qwen2.5-0.5b
+FOUNDRY_ENDPOINT=http://localhost:<your-port>
+FOUNDRY_MODEL=<your-model-name>
 ```
 
 ### 3. Test Foundry Connection
@@ -121,7 +115,7 @@ uvicorn src.main:app --reload
 make run-backend
 ```
 
-Backend runs at http://localhost:8000
+Backend API will be available locally.
 
 ### 5. Run Frontend
 
@@ -131,7 +125,7 @@ cd frontend
 npm run dev
 ```
 
-Frontend runs at http://localhost:3000
+Frontend will be available locally.
 
 ### 6. Setup Local Kubernetes
 
@@ -243,9 +237,9 @@ Comprehensive documentation is available:
 
 ## Current Status
 
-🚧 **Week 1 MVP - Foundation Complete** 🚧
+🚧 **Active Development** 🚧
 
-**Completed:**
+**Foundation Complete:**
 - ✅ Complete project structure
 - ✅ Backend tooling (black, isort, mypy, pylint, pytest)
 - ✅ Frontend tooling (ESLint, Prettier, TypeScript strict)
@@ -255,23 +249,14 @@ Comprehensive documentation is available:
 - ✅ Comprehensive documentation
 - ✅ Makefile and setup scripts
 
-**In Progress:**
-- 🔄 Kubernetes watcher implementation
-- 🔄 Context buffer implementation
+**In Development:**
+- 🔄 Kubernetes monitoring and data collection
+- 🔄 Context management system
 - 🔄 REST API endpoints
-- 🔄 WebSocket chat streaming
+- 🔄 WebSocket chat interface
 - 🔄 React UI components
-- 🔄 Helm chart
+- 🔄 Helm deployment chart
 - 🔄 Integration tests
-
-**Next Steps:**
-1. Implement Kubernetes watcher service
-2. Build context buffer with circular buffer
-3. Create REST API endpoints
-4. Implement WebSocket streaming
-5. Build React chat UI components
-6. Create Helm chart
-7. End-to-end testing
 
 ## Testing
 
@@ -319,7 +304,7 @@ pip install -r requirements-dev.txt
 
 ```powershell
 # Test Foundry is running
-curl http://127.0.0.1:58366
+curl http://localhost:<your-foundry-port>
 
 # Run connection test
 python -m src.services.foundry
@@ -335,11 +320,9 @@ Remove-Item package-lock.json
 npm install
 ```
 
-## Contact
+## Contributing
 
-**Repository**: [github.com/smitzlroy/aksarc-foundrylocal-aiops](https://github.com/smitzlroy/aksarc-foundrylocal-aiops)
-
-**Author**: smitzlroy
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ---
 
