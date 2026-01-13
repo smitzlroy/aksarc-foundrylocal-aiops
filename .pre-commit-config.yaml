@@ -1,4 +1,12 @@
 repos:
+  # Security: Detect secrets and sensitive data
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package.lock.json
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -12,6 +20,9 @@ repos:
       - id: check-toml
       - id: debug-statements
       - id: mixed-line-ending
+      - id: detect-private-key  # Security: Block private keys
+      - id: check-case-conflict
+      - id: forbid-new-submodules
 
   - repo: https://github.com/psf/black
     rev: 24.1.1

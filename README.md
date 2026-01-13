@@ -42,9 +42,9 @@ This project provides a natural language interface for Kubernetes operators to i
 
 - **Backend**: Python 3.11+ with FastAPI, async/await, structured logging
 - **Frontend**: React 18 + TypeScript (strict mode) with Vite and Tailwind CSS
-- **AI**: Azure AI Foundry Local with qwen2.5-0.5b model
+- **AI**: Azure AI Foundry Local (configure your model endpoint)
 - **Deployment**: Helm chart for Kubernetes (k3s local, AKS Arc production)
-- **Data**: In-memory buffer (last 2 hours of cluster data)
+- **Data**: In-memory buffer (configurable retention period)
 
 ## Prerequisites
 
@@ -86,12 +86,25 @@ npm install
 
 ### 2. Configure Environment
 
-The setup script creates `backend\.env` with defaults. Configure your Foundry endpoint:
+Create `backend\.env` from the template:
+
+```powershell
+cp backend\.env.example backend\.env
+```
+
+**IMPORTANT**: Edit `backend\.env` with your actual values:
 
 ```env
 FOUNDRY_ENDPOINT=http://localhost:<your-port>
 FOUNDRY_MODEL=<your-model-name>
+FOUNDRY_TIMEOUT=30
+API_HOST=0.0.0.0
+API_PORT=8000
+CONTEXT_BUFFER_HOURS=24
+LOG_LEVEL=INFO
 ```
+
+**NEVER commit `.env` files to git!** Only commit `.env.example` templates.
 
 ### 3. Test Foundry Connection
 
@@ -271,6 +284,21 @@ pytest tests/unit/test_api_basic.py -v
 # View coverage report
 # Open htmlcov/index.html in browser
 ```
+
+## Security
+
+**IMPORTANT**: This repository follows strict security practices. See [`docs/security.md`](docs/security.md) for complete guidelines.
+
+### Quick Security Rules:
+- ❌ **NEVER** commit `.env` files (only `.env.example`)
+- ❌ **NEVER** commit `kubeconfig` or cluster config files
+- ❌ **NEVER** commit API keys, tokens, passwords, or secrets
+- ❌ **NEVER** commit private keys (.key, .pem files)
+- ✅ **ALWAYS** use environment variables for configuration
+- ✅ **ALWAYS** run pre-commit hooks before committing
+- ✅ **ALWAYS** use placeholders in documentation
+
+Pre-commit hooks automatically check for secrets and sensitive data before each commit.
 
 ## Contributing
 
