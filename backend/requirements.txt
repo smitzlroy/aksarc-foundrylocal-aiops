@@ -1,0 +1,22 @@
+# Core Web Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Kubernetes Client
+kubernetes>=29.0.0
+
+# Data Validation
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# HTTP and WebSockets
+python-multipart>=0.0.6
+websockets>=12.0
+httpx>=0.26.0
+
+# Logging
+structlog>=24.1.0
+python-json-logger>=2.0.7
+
+# Configuration
+python-dotenv>=1.0.0

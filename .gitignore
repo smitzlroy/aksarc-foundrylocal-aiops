@@ -1,0 +1,155 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+cython_debug/
+
+# Virtual Environments
+venv/
+ENV/
+env/
+.venv/
+
+# Node / JavaScript / TypeScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+dist/
+dist-ssr/
+*.local
+.npm
+.eslintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+.parcel-cache
+.next
+out
+.nuxt
+.cache
+.vuepress/dist
+.docusaurus
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+.vscode-test
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+.envrc
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Helm
+charts/*.tgz
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Build artifacts
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+
+# Docker
+.dockerignore
+
+# macOS
+.AppleDouble
+.LSOverride
+Icon
