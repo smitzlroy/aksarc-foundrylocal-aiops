@@ -1,6 +1,12 @@
 # AKS Arc + Foundry Local AI Ops Assistant
 
+[![Security Scan](https://github.com/smitzlroy/aksarc-foundrylocal-aiops/actions/workflows/security-scan.yml/badge.svg)](https://github.com/smitzlroy/aksarc-foundrylocal-aiops/actions/workflows/security-scan.yml)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Status](https://img.shields.io/badge/status-active%20development-green.svg)
+
 A professional-grade AI Operations Assistant for Azure AKS Arc clusters, powered by Azure AI Foundry Local.
+
+> **🔒 Security First**: This repository follows strict security practices. All sensitive data is protected from commits. See [Security Documentation](docs/security.md) and [Secure Workflow](docs/secure-workflow.md).
 
 ## Overview
 

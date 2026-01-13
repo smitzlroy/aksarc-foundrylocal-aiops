@@ -1,0 +1,162 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run weekly security scan every Monday at 9am UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  security-scan:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for secret scanning
+
+      - name: Run Gitleaks (Secret Scanner)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # Optional: for commercial use
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install detect-secrets
+        run: |
+          pip install detect-secrets
+
+      - name: Run detect-secrets scan
+        run: |
+          detect-secrets scan --all-files --force-use-all-plugins \
+            --exclude-files 'package-lock.json|\.secrets\.baseline' \
+            > security-scan-results.json || true
+
+      - name: Check for secrets
+        run: |
+          if [ -s security-scan-results.json ]; then
+            echo "⚠️ Potential secrets detected!"
+            cat security-scan-results.json
+            exit 1
+          else
+            echo "✅ No secrets detected"
+          fi
+
+      - name: Verify .gitignore patterns
+        run: |
+          echo "🔍 Verifying sensitive files are ignored..."
+          
+          # Check if .gitignore exists and has required patterns
+          if ! grep -q "\.env" .gitignore; then
+            echo "❌ Missing .env pattern in .gitignore"
+            exit 1
+          fi
+          
+          if ! grep -q "kubeconfig" .gitignore; then
+            echo "❌ Missing kubeconfig pattern in .gitignore"
+            exit 1
+          fi
+          
+          if ! grep -q "\*secret\*" .gitignore; then
+            echo "❌ Missing *secret* pattern in .gitignore"
+            exit 1
+          fi
+          
+          echo "✅ .gitignore patterns verified"
+
+      - name: Check for sensitive file types
+        run: |
+          echo "🔍 Checking for sensitive file types..."
+          
+          # Check for .env files (except .env.example)
+          ENVFILES=$(git ls-files | grep -E "\.env$" | grep -v "\.env\.example" || true)
+          if [ -n "$ENVFILES" ]; then
+            echo "❌ Found .env files tracked by git:"
+            echo "$ENVFILES"
+            exit 1
+          fi
+          
+          # Check for kubeconfig files
+          KUBEFILES=$(git ls-files | grep -i "kubeconfig" || true)
+          if [ -n "$KUBEFILES" ]; then
+            echo "❌ Found kubeconfig files tracked by git:"
+            echo "$KUBEFILES"
+            exit 1
+          fi
+          
+          # Check for private keys
+          KEYFILES=$(git ls-files | grep -E "\.(key|pem|pfx|p12)$" || true)
+          if [ -n "$KEYFILES" ]; then
+            echo "❌ Found private key files tracked by git:"
+            echo "$KEYFILES"
+            exit 1
+          fi
+          
+          echo "✅ No sensitive file types found"
+
+      - name: Check for hardcoded IPs (non-localhost)
+        run: |
+          echo "🔍 Checking for hardcoded IP addresses..."
+          
+          # Find IPs that aren't localhost
+          IPS=$(git grep -E "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" -- \
+            ':!.github/' ':!SECURITY_AUDIT.md' ':!docs/security.md' | \
+            grep -v "127.0.0.1" | grep -v "0.0.0.0" || true)
+          
+          if [ -n "$IPS" ]; then
+            echo "⚠️ Found potential hardcoded IP addresses:"
+            echo "$IPS"
+            echo "Verify these are intentional (e.g., examples in docs)"
+          else
+            echo "✅ No hardcoded IPs found"
+          fi
+
+      - name: Verify .env.example exists
+        run: |
+          echo "🔍 Verifying .env.example templates exist..."
+          
+          if [ ! -f "backend/.env.example" ]; then
+            echo "❌ Missing backend/.env.example"
+            exit 1
+          fi
+          
+          if [ ! -f "frontend/.env.example" ]; then
+            echo "❌ Missing frontend/.env.example"
+            exit 1
+          fi
+          
+          echo "✅ .env.example templates found"
+
+      - name: Security scan summary
+        if: success()
+        run: |
+          echo "✅ All security checks passed!"
+          echo ""
+          echo "📊 Security Scan Results:"
+          echo "  ✅ No secrets detected"
+          echo "  ✅ No sensitive files tracked"
+          echo "  ✅ .gitignore properly configured"
+          echo "  ✅ .env.example templates present"
+          echo ""
+          echo "Repository is safe for public sharing."
+
+      - name: Upload scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-results
+          path: security-scan-results.json
+          retention-days: 30

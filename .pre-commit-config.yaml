@@ -62,3 +62,13 @@ repos:
       - id: prettier
         files: \.(js|ts|jsx|tsx|json|css|md|yaml|yml)$
         exclude: ^backend/
+
+  # Custom security verification script
+  - repo: local
+    hooks:
+      - id: security-check
+        name: Security Verification
+        entry: pwsh -File scripts/verify-security.ps1
+        language: system
+        pass_filenames: false
+        always_run: true
