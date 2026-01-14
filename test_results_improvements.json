@@ -1,0 +1,128 @@
+{
+  "timestamp": "2026-01-14T21:15:47.031754",
+  "tests_run": 20,
+  "tests_passed": 19,
+  "tests_failed": 1,
+  "details": [
+    {
+      "test": "Topology API returns required fields",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Expected fields: pods, services, dependencies, communication_matrix"
+    },
+    {
+      "test": "Pod objects include IP field",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Pod structure includes: name, namespace, ip, ports"
+    },
+    {
+      "test": "Service objects include IP fields",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Service structure includes: name, namespace, cluster_ip, external_ip, ports"
+    },
+    {
+      "test": "IP badge CSS styling exists",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Found .ip-badge class in stylesheet"
+    },
+    {
+      "test": "Communication matrix renders pod IPs",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Found pod IP rendering in communication matrix"
+    },
+    {
+      "test": "Dependencies render service IPs",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Found service IP rendering in dependencies section"
+    },
+    {
+      "test": "Target pods display IPs",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Found pod IP display in target pods list"
+    },
+    {
+      "test": "Export button exists in topology modal",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Found export button with onclick handler"
+    },
+    {
+      "test": "exportTopology() function defined",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Export function implementation found"
+    },
+    {
+      "test": "Topology data stored for export",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Data stored in window.topologyData"
+    },
+    {
+      "test": "Export creates JSON blob",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "JSON blob creation logic found"
+    },
+    {
+      "test": "Export filename includes timestamp",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Timestamp-based filename generation found"
+    },
+    {
+      "test": "Quick Actions bar exists",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Found Quick Actions section in page"
+    },
+    {
+      "test": "Diagnostics accessible from Quick Actions",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Diagnostics function called 5 times (main panel + quick actions)"
+    },
+    {
+      "test": "Diagnostics modal implemented",
+      "status": "\u274c FAIL",
+      "passed": false,
+      "message": "Diagnostics modal UI found"
+    },
+    {
+      "test": "Action button styling exists",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Action button CSS class defined"
+    },
+    {
+      "test": "Modal header uses flexbox layout",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Proper layout for export button + close button"
+    },
+    {
+      "test": "IP badges include visual icons",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Emoji icons enhance IP visibility"
+    },
+    {
+      "test": "External IPs have distinct styling",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "External IPs styled differently from cluster IPs"
+    },
+    {
+      "test": "Quick Actions has visual appeal",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "message": "Gradient background applied to Quick Actions bar"
+    }
+  ]
+}

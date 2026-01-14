@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Topology Improvements</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a2e; color: #fff; }
+        .test-section { margin: 20px 0; padding: 20px; background: #16213e; border-radius: 8px; }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #667eea; color: white; border: none; border-radius: 6px; }
+        button:hover { background: #764ba2; }
+        .ip-badge { background: #10b981; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-family: 'Courier New', monospace; display: inline-block; margin: 0 4px; font-weight: 500; }
+        pre { background: #0f0f1e; padding: 15px; border-radius: 6px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Topology Improvements Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Fetch Topology Data</h2>
+        <button onclick="testFetchTopology()">▶️ Run Test</button>
+        <div id="test1Result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Check IP Data in Response</h2>
+        <button onclick="testIPData()">▶️ Run Test</button>
+        <div id="test2Result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Test Export Function</h2>
+        <button onclick="testExport()">▶️ Run Test</button>
+        <div id="test3Result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 4: Visual IP Badge Rendering</h2>
+        <p>Example IP badges:</p>
+        <span class="ip-badge">📍 10.42.0.5</span>
+        <span class="ip-badge">🌐 10.43.100.25</span>
+        <span class="ip-badge" style="background: #4a90e2;">🌍 52.186.14.10</span>
+        <div id="test4Result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+        let topologyData = null;
+
+        async function testFetchTopology() {
+            const result = document.getElementById('test1Result');
+            result.innerHTML = '<p class="info">⏳ Fetching topology data...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/topology/analyze`);
+                topologyData = await response.json();
+                
+                const summary = {
+                    pods: topologyData.pods?.length || 0,
+                    services: topologyData.services?.length || 0,
+                    dependencies: topologyData.dependencies?.length || 0,
+                    communication_matrix: topologyData.communication_matrix?.length || 0
+                };
+                
+                result.innerHTML = `
+                    <p class="success">✅ Success! Fetched topology data</p>
+                    <pre>${JSON.stringify(summary, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testIPData() {
+            const result = document.getElementById('test2Result');
+            
+            if (!topologyData) {
+                result.innerHTML = '<p class="error">❌ Please run Test 1 first</p>';
+                return;
+            }
+            
+            result.innerHTML = '<p class="info">⏳ Checking for IP addresses in data...</p>';
+            
+            const podIPs = topologyData.pods?.filter(p => p.ip).map(p => ({
+                name: p.name,
+                ip: p.ip
+            })) || [];
+            
+            const serviceIPs = topologyData.services?.filter(s => s.cluster_ip || s.external_ip).map(s => ({
+                name: s.name,
+                cluster_ip: s.cluster_ip,
+                external_ip: s.external_ip
+            })) || [];
+            
+            result.innerHTML = `
+                <p class="success">✅ IP Data Check Complete</p>
+                <h3>Pod IPs (${podIPs.length}):</h3>
+                <pre>${JSON.stringify(podIPs.slice(0, 5), null, 2)}</pre>
+                <h3>Service IPs (${serviceIPs.length}):</h3>
+                <pre>${JSON.stringify(serviceIPs.slice(0, 5), null, 2)}</pre>
+            `;
+        }
+
+        function testExport() {
+            const result = document.getElementById('test3Result');
+            
+            if (!topologyData) {
+                result.innerHTML = '<p class="error">❌ Please run Test 1 first</p>';
+                return;
+            }
+            
+            try {
+                const timestamp = new Date().toISOString().split('T')[0];
+                const filename = `topology-test-${timestamp}.json`;
+                
+                const exportData = {
+                    exported_at: new Date().toISOString(),
+                    cluster_info: {
+                        pods: topologyData.pods?.length || 0,
+                        services: topologyData.services?.length || 0,
+                        dependencies: topologyData.dependencies?.length || 0,
+                        network_policies: topologyData.network_policies?.length || 0
+                    },
+                    topology: topologyData
+                };
+                
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                result.innerHTML = `
+                    <p class="success">✅ Export successful!</p>
+                    <p>Downloaded: <code>${filename}</code></p>
+                    <p>Size: ${(blob.size / 1024).toFixed(2)} KB</p>
+                `;
+            } catch (error) {
+                result.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

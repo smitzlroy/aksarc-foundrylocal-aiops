@@ -1,363 +1,322 @@
-# AKS Arc + Foundry Local AI Ops Assistant
+# 🤖 K8s AI Assistant
 
-[![Security Scan](https://github.com/smitzlroy/aksarc-foundrylocal-aiops/actions/workflows/security-scan.yml/badge.svg)](https://github.com/smitzlroy/aksarc-foundrylocal-aiops/actions/workflows/security-scan.yml)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Status](https://img.shields.io/badge/status-active%20development-green.svg)
+<div align="center">
 
-A professional-grade AI Operations Assistant for Azure AKS Arc clusters, powered by Azure AI Foundry Local.
+**Chat with your Kubernetes cluster in natural language**
 
-> **🔒 Security First**: This repository follows strict security practices. All sensitive data is protected from commits. See [Security Documentation](docs/security.md) and [Secure Workflow](docs/secure-workflow.md).
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-## Overview
+[Features](#-features) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [Documentation](#-documentation)
 
-This project provides a natural language interface for Kubernetes operators to interact with their AKS Arc clusters. All AI processing happens locally via Azure AI Foundry Local, ensuring no cloud dependency for inference.
-
-**Key Differentiator**: Unlike cloud-based solutions, this assistant runs entirely on-premises or at the edge, making it ideal for disconnected environments, high-security scenarios, and cost-sensitive deployments.
-
-## Key Features
-
-- 🔄 **Natural Language Q&A**: Ask questions about your cluster in plain English
-- 🔄 **Real-time Monitoring**: Watches logs, events, and metrics from Kubernetes
-- 🔄 **Local AI Processing**: All AI inference via Azure AI Foundry Local
-- 🔄 **Modern Web UI**: Clean, responsive chat interface with status cards
-- 🔄 **Production-Ready Code**: Type hints, tests, structured logging throughout
-- 🔄 **Easy Deployment**: Helm chart for deployment to any Kubernetes cluster
-
-### Future Enhancements
-
-- Historical data storage and analytics
-- Multi-cluster support
-- Advanced security features
-- CLI tool for power users
-
-## Architecture
-
-```
-┌──────────────┐         ┌──────────────┐         ┌──────────────┐
-│   React UI   │────────▶│   FastAPI    │────────▶│  Kubernetes  │
-│              │ WS/HTTP │              │  K8s API│   Cluster    │
-└──────────────┘         └──────┬───────┘         └──────────────┘
-                                │
-                                │ HTTP
-                                ▼
-                         ┌──────────────┐
-                         │ Foundry Local│
-                         │   AI Model   │
-                         └──────────────┘
-```
-
-- **Backend**: Python 3.11+ with FastAPI, async/await, structured logging
-- **Frontend**: React 18 + TypeScript (strict mode) with Vite and Tailwind CSS
-- **AI**: Azure AI Foundry Local (configure your model endpoint)
-- **Deployment**: Helm chart for Kubernetes (k3s local, AKS Arc production)
-- **Data**: In-memory buffer (configurable retention period)
-
-## Prerequisites
-
-### Required
-
-- **Python 3.11+**: Backend development
-- **Node.js 18+**: Frontend development
-- **Azure AI Foundry Local**: Running locally
-- **Docker Desktop** or **k3s**: Local Kubernetes cluster
-- **kubectl**: Kubernetes CLI configured
-- **Git**: Version control
-
-### Recommended
-
-- **Make**: Build automation (Windows: choco install make)
-- **VS Code**: IDE with Python and TypeScript extensions
-- **k9s**: Terminal-based Kubernetes UI
-
-## Quick Start
-
-### 1. Clone and Setup
-
-```powershell
-# Clone repository
-git clone https://github.com/<your-username>/aksarc-foundrylocal-aiops.git
-cd aksarc-foundrylocal-aiops
-
-# Run automated setup (Windows)
-.\setup.ps1
-
-# Or manual setup
-cd backend
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-pip install -r requirements-dev.txt
-cd ..\frontend
-npm install
-```
-
-### 2. Configure Environment
-
-Create `backend\.env` from the template:
-
-```powershell
-cp backend\.env.example backend\.env
-```
-
-**IMPORTANT**: Edit `backend\.env` with your actual values:
-
-```env
-FOUNDRY_ENDPOINT=http://localhost:<your-port>
-FOUNDRY_MODEL=<your-model-name>
-FOUNDRY_TIMEOUT=30
-API_HOST=0.0.0.0
-API_PORT=8000
-CONTEXT_BUFFER_HOURS=24
-LOG_LEVEL=INFO
-```
-
-**NEVER commit `.env` files to git!** Only commit `.env.example` templates.
-
-### 3. Test Foundry Connection
-
-```powershell
-cd backend
-.\venv\Scripts\Activate.ps1
-python -m src.services.foundry
-```
-
-You should see connection tests pass.
-
-### 4. Run Backend
-
-```powershell
-# Terminal 1
-cd backend
-.\venv\Scripts\Activate.ps1
-uvicorn src.main:app --reload
-
-# Or using Make
-make run-backend
-```
-
-Backend API will be available locally.
-
-### 5. Run Frontend
-
-```powershell
-# Terminal 2
-cd frontend
-npm run dev
-```
-
-Frontend will be available locally.
-
-### 6. Setup Local Kubernetes
-
-See detailed guide: [docs/k3s-setup.md](docs/k3s-setup.md)
-
-**Quick k3d setup:**
-
-```powershell
-# Install k3d (if not installed)
-choco install k3d
-
-# Create cluster
-k3d cluster create aiops-dev --port 8000:8000@loadbalancer
-
-# Verify
-kubectl get nodes
-```
-
-## Project Structure
-
-```
-aksarc-foundrylocal-aiops/
-├── backend/                    # Python FastAPI backend
-│   ├── src/
-│   │   ├── api/               # HTTP and WebSocket routes
-│   │   ├── core/              # Config, logging, exceptions
-│   │   ├── models/            # Pydantic data models
-│   │   ├── services/          # K8s, Foundry, context services
-│   │   └── main.py            # FastAPI application
-│   ├── tests/                 # Unit and integration tests
-│   ├── requirements.txt       # Production dependencies
-│   ├── requirements-dev.txt   # Development dependencies
-│   ├── pyproject.toml         # Python tooling config
-│   └── Dockerfile             # Container image
-├── frontend/                   # React TypeScript frontend
-│   ├── src/
-│   │   ├── components/        # React components
-│   │   ├── hooks/             # Custom React hooks
-│   │   ├── services/          # API clients
-│   │   ├── types/             # TypeScript types
-│   │   └── App.tsx            # Root component
-│   ├── package.json           # Node dependencies
-│   ├── tsconfig.json          # TypeScript config (strict)
-│   └── vite.config.ts         # Vite bundler config
-├── helm/                       # Helm chart for deployment
-├── docs/                       # Documentation
-│   ├── architecture.md        # System architecture
-│   ├── development.md         # Development guide
-│   ├── deployment.md          # Deployment guide
-│   └── k3s-setup.md           # k3s setup instructions
-├── Makefile                    # Build automation
-├── setup.ps1                   # Automated setup script
-└── README.md                   # This file
-```
-
-## Development Workflow
-
-### Code Quality Standards
-
-This project has **strict quality requirements**:
-
-- ✅ **Type hints required** on all Python functions
-- ✅ **Docstrings required** (Google style)
-- ✅ **Error handling required** (no bare exceptions)
-- ✅ **Logging required** (structured JSON logs)
-- ✅ **Tests required** (80%+ coverage)
-- ✅ **TypeScript strict mode** (no 'any' types)
-
-### Pre-commit Checks
-
-Pre-commit hooks automatically run:
-
-- **black**: Python code formatting
-- **isort**: Import sorting
-- **mypy**: Type checking
-- **pylint**: Code linting
-- **prettier**: Frontend formatting
-
-### Common Commands
-
-```powershell
-# Run all tests
-make test
-
-# Format all code
-make format
-
-# Run all linters
-make lint
-
-# Type check
-make type-check
-
-# Clean build artifacts
-make clean
-
-# Run pre-commit hooks
-make pre-commit
-```
-
-## Documentation
-
-Comprehensive documentation is available:
-
-- **[Architecture](docs/architecture.md)**: System design, data flow, component details
-- **[Development](docs/development.md)**: Setup, coding standards, testing strategy
-- **[Deployment](docs/deployment.md)**: Local and production deployment guides
-- **[k3s Setup](docs/k3s-setup.md)**: Local Kubernetes cluster setup
-
-## Current Status
-
-🚧 **Active Development** 🚧
-
-**Foundation Complete:**
-- ✅ Complete project structure
-- ✅ Backend tooling (black, isort, mypy, pylint, pytest)
-- ✅ Frontend tooling (ESLint, Prettier, TypeScript strict)
-- ✅ Foundry Local client with validation
-- ✅ Core configuration and logging
-- ✅ Data models for cluster state and chat
-- ✅ Comprehensive documentation
-- ✅ Makefile and setup scripts
-
-**In Development:**
-- 🔄 Kubernetes monitoring and data collection
-- 🔄 Context management system
-- 🔄 REST API endpoints
-- 🔄 WebSocket chat interface
-- 🔄 React UI components
-- 🔄 Helm deployment chart
-- 🔄 Integration tests
-
-## Testing
-
-```powershell
-# Run all tests with coverage
-cd backend
-pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html
-
-# Run specific test file
-pytest tests/unit/test_api_basic.py -v
-
-# View coverage report
-# Open htmlcov/index.html in browser
-```
-
-## Security
-
-**IMPORTANT**: This repository follows strict security practices. See [`docs/security.md`](docs/security.md) for complete guidelines.
-
-### Quick Security Rules:
-- ❌ **NEVER** commit `.env` files (only `.env.example`)
-- ❌ **NEVER** commit `kubeconfig` or cluster config files
-- ❌ **NEVER** commit API keys, tokens, passwords, or secrets
-- ❌ **NEVER** commit private keys (.key, .pem files)
-- ✅ **ALWAYS** use environment variables for configuration
-- ✅ **ALWAYS** run pre-commit hooks before committing
-- ✅ **ALWAYS** use placeholders in documentation
-
-Pre-commit hooks automatically check for secrets and sensitive data before each commit.
-
-## Contributing
-
-This is currently a personal project. Contribution guidelines will be added in future releases.
-
-### Development Principles
-
-- **Quality over speed**: Code must be production-grade
-- **Test everything**: No untested code
-- **Document thoroughly**: Code should be self-explanatory
-- **Type everything**: Leverage Python and TypeScript type systems
-- **Log strategically**: Structured logging for observability
-
-## License
-
-*(License information to be added)*
-
-## Troubleshooting
-
-### Backend won't start
-
-```powershell
-# Ensure virtual environment is activated
-backend\venv\Scripts\Activate.ps1
-
-# Reinstall dependencies
-pip install -r requirements-dev.txt
-```
-
-### Foundry connection fails
-
-```powershell
-# Test Foundry is running
-curl http://localhost:<your-foundry-port>
-
-# Run connection test
-python -m src.services.foundry
-```
-
-### Frontend build errors
-
-```powershell
-# Clear cache and reinstall
-cd frontend
-Remove-Item -Recurse -Force node_modules
-Remove-Item package-lock.json
-npm install
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+</div>
 
 ---
 
-*Built with ❤️ for Kubernetes operators who need local AI assistance*
+## 🌟 What is K8s AI Assistant?
+
+K8s AI Assistant is a **natural language interface** for Kubernetes that lets you interact with your cluster using plain English. Ask questions, get pod logs, visualize network topology, and run diagnostics - all through an intuitive chat interface powered by local AI.
+
+### Why Choose K8s AI Assistant?
+
+- **💬 Natural Language**: No more memorizing kubectl commands - just ask naturally
+- **🔒 Privacy First**: All AI processing happens locally via Azure AI Foundry Local
+- **🎯 Multi-Platform**: Works with k8s, k3s, and Azure Kubernetes Service (AKS Arc)
+- **🗺️ Network Topology**: Visualize pod communication, services, and network policies with IP addresses
+- **🔍 Smart Diagnostics**: Automated cluster health checks with actionable recommendations
+- **⚡ Modern UI**: Clean, responsive interface with real-time updates
+- **🚀 Easy Setup**: Get running in under 5 minutes
+
+---
+
+## ✨ Features
+
+### 🗣️ Natural Language Query
+```
+You: "Show me all failing pods"
+Assistant: Here are 2 pods with issues:
+  - nginx-deployment-xyz: CrashLoopBackOff
+  - redis-cache-abc: ImagePullBackOff
+```
+
+### 🗺️ Network Topology Visualization
+- **Communication Matrix**: See which pods talk to which services
+- **IP Addresses**: View pod IPs (📍 10.42.0.5), service cluster IPs (🌐 10.43.0.1), and external IPs (🌍 52.186.14.10)
+- **Dependencies**: Understand service-to-pod relationships with port mappings
+- **Network Policies**: Identify security rules and unrestricted namespaces
+- **Export**: Download topology data as JSON for documentation and analysis
+
+### 🔍 Cluster Diagnostics
+- **Basic Health Checks**: Cluster connectivity, pod health, service status (works on all K8s platforms)
+- **AKS Arc Diagnostics**: Advanced PowerShell-based diagnostics (optional module)
+- **Progress Tracking**: Real-time feedback with 3-step progress indicator
+- **Auto-Remediation**: Automated fixes for common issues
+- **Fallback Support**: Works even without AKS Arc module installed
+
+### 📊 Quick Actions Bar
+- 🔍 **Diagnostics & Logs**: One-click access to cluster diagnostics
+- 🗺️ **Network Topology**: Visualize cluster network instantly
+- 📋 **Recent Logs**: View recent pod logs
+- 🏥 **Health Check**: Get cluster status overview
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Kubernetes Cluster**: k3s, k8s, or AKS Arc
+- **kubectl**: Configured to access your cluster
+- **Python 3.11+**: For the backend
+- **Azure AI Foundry Local** *(optional)*: For AI-powered chat features
+
+### Installation
+
+#### Windows:
+
+```powershell
+# Clone the repository
+git clone https://github.com/yourusername/k8s-ai-assistant.git
+cd k8s-ai-assistant
+
+# Run the start script
+.\run.ps1
+```
+
+#### Linux/Mac:
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/k8s-ai-assistant.git
+cd k8s-ai-assistant
+
+# Make script executable and run
+chmod +x run.py
+python3 run.py
+```
+
+The application will:
+1. ✅ Check Python dependencies
+2. ✅ Install required packages
+3. ✅ Start the backend server
+4. ✅ Open your browser to http://localhost:8000
+
+### First Steps
+
+1. **Check Cluster Connection**: The UI will show cluster stats (pods, nodes, namespaces) if connected
+2. **Try Quick Actions**:
+   - 🔍 **Diagnostics & Logs**: Run cluster health checks
+   - 🗺️ **Network Topology**: Visualize your cluster network with IP addresses
+   - 📋 **Recent Logs**: View recent pod logs
+   - 🏥 **Health Check**: Get cluster status overview
+
+3. **Ask Questions** (requires AI Foundry):
+   ```
+   "Show me all pods in the default namespace"
+   "Which pods are using the most memory?"
+   "Get logs from nginx pod"
+   ```
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Web Browser                             │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────────────┐    │
+│  │ Chat UI     │  │  Topology    │  │   Diagnostics      │    │
+│  │ (HTML/JS)   │  │  Viewer      │  │   Panel            │    │
+│  └──────┬──────┘  └──────┬───────┘  └─────────┬──────────┘    │
+└─────────┼─────────────────┼────────────────────┼───────────────┘
+          │                 │                    │
+          └─────────────────┴────────────────────┘
+                            │
+                         HTTP/REST
+                            │
+┌───────────────────────────▼─────────────────────────────────────┐
+│                    FastAPI Backend (Python)                     │
+│  ┌────────────┐  ┌────────────┐  ┌──────────────────────┐     │
+│  │ Routes     │  │ Services   │  │  Kubernetes Client   │     │
+│  │            │  │            │  │                      │     │
+│  │ • /chat    │→ │ • K8s      │→ │  • Pod Management    │     │
+│  │ • /topology│  │ • Network  │  │  • Service Discovery │     │
+│  │ • /diag    │  │ • Diag     │  │  • Event Monitoring  │     │
+│  └────────────┘  └────────────┘  └──────────────────────┘     │
+└───────────────────────┬──────────────────────────────────────────┘
+                        │
+        ┌───────────────┼───────────────┐
+        │               │               │
+        ▼               ▼               ▼
+┌──────────────┐ ┌─────────────┐ ┌────────────────┐
+│ Kubernetes   │ │   Azure AI  │ │   PowerShell   │
+│   Cluster    │ │   Foundry   │ │  (AKS Arc)     │
+│              │ │   Local     │ │                │
+│ • k8s/k3s    │ │ (Optional)  │ │  (Optional)    │
+│ • AKS Arc    │ └─────────────┘ └────────────────┘
+└──────────────┘
+```
+
+### Technology Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Frontend** | HTML/CSS/JavaScript | Single-page application |
+| **Backend** | Python 3.11+ FastAPI | REST API server |
+| **AI (Optional)** | Azure AI Foundry Local | Natural language processing |
+| **Kubernetes** | kubectl / Python Client | Cluster interaction |
+| **Platform** | k8s / k3s / AKS Arc | Target clusters |
+
+---
+
+## 📖 Documentation
+
+### User Guides
+- [Quick Start Guide](QUICKSTART.md) - Get up and running
+- [Troubleshooting](FOUNDRY_TROUBLESHOOTING.md) - Common issues and solutions
+
+### Developer Guides
+- [Architecture Overview](ARCHITECTURE.md) - System design and components
+- [Development Setup](docs/DEVELOPMENT.md) - Setting up dev environment
+
+### Feature Documentation
+- [Network Topology](VISUAL_IMPROVEMENTS_GUIDE.md) - Topology visualization with IP addresses
+- [Diagnostics System](DIAGNOSTICS_IMPROVEMENTS.md) - Cluster diagnostics and health checks
+- [AKS Arc Integration](AKS_ARC_IMPLEMENTATION_SUMMARY.md) - AKS Arc specific features
+
+---
+
+## 🔧 Configuration
+
+### Backend Configuration
+
+Create `backend/.env` (optional for AI features):
+
+```env
+# Azure AI Foundry Local (optional)
+FOUNDRY_ENDPOINT=http://localhost:8080
+FOUNDRY_MODEL=phi-3-mini-4k-instruct
+
+# Logging
+LOG_LEVEL=INFO
+
+# Server
+HOST=0.0.0.0
+PORT=8000
+```
+
+### Kubernetes Configuration
+
+The assistant uses your existing `~/.kube/config`. Ensure kubectl is configured:
+
+```bash
+kubectl cluster-info
+```
+
+---
+
+## 🎯 Use Cases
+
+### For DevOps Engineers
+- **Quick Troubleshooting**: "Show me pods with high restart counts"
+- **Log Analysis**: "Get logs from all nginx pods in the last hour"
+- **Resource Monitoring**: "Which nodes are under pressure?"
+
+### For Platform Engineers
+- **Network Mapping**: Visualize service mesh and dependencies with full IP information
+- **Security Audits**: Identify pods without network policies
+- **Capacity Planning**: Export topology data as JSON for documentation
+
+### For Site Reliability Engineers (SRE)
+- **Health Checks**: Automated diagnostics with remediation suggestions
+- **Incident Response**: Quick access to logs and events
+- **Post-Mortem**: Export cluster state for analysis
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how you can help:
+
+1. **🐛 Report Bugs**: Open an issue with details
+2. **💡 Suggest Features**: Share your ideas in discussions
+3. **📝 Improve Docs**: Help make documentation clearer
+4. **🔧 Submit PRs**: Fix bugs or add features
+
+### Development Setup
+
+```powershell
+# Clone and install
+git clone https://github.com/yourusername/k8s-ai-assistant.git
+cd k8s-ai-assistant
+cd backend
+pip install -r requirements.txt
+
+# Start development server
+python -m src.main
+```
+
+---
+
+## 🔐 Security
+
+- **No Cloud Dependencies**: All processing happens locally
+- **No Data Collection**: Your cluster data stays on your infrastructure
+- **Audit Trail**: All API calls are logged
+- **RBAC Compatible**: Works with Kubernetes RBAC
+
+**Important**: Never commit sensitive data. All `.env` files and credentials are excluded via `.gitignore`.
+
+---
+
+## 📋 Roadmap
+
+### ✅ Completed
+- [x] Natural language chat interface
+- [x] Network topology visualization with IP addresses
+- [x] Cluster diagnostics with progress tracking
+- [x] Multi-platform support (k8s/k3s/AKS Arc)
+- [x] Export topology data to JSON
+- [x] Quick Actions bar for common tasks
+- [x] Fallback diagnostics for all K8s clusters
+
+### 🔮 Planned
+- [ ] Historical metrics storage
+- [ ] Multi-cluster support
+- [ ] Custom diagnostic plugins
+- [ ] GitOps integration
+- [ ] Helm chart deployment
+- [ ] CLI interface
+
+---
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Azure AI Foundry Team**: For the local AI runtime
+- **Kubernetes Community**: For excellent APIs and tools
+- **FastAPI**: For the amazing Python web framework
+- **Contributors**: Everyone who helps improve this project
+
+---
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/k8s-ai-assistant/issues)
+- **Documentation**: Check the `docs/` folder for detailed guides
+
+---
+
+<div align="center">
+
+**Made with ❤️ for the Kubernetes community**
+
+Star ⭐ this repo if you find it helpful!
+
+</div>

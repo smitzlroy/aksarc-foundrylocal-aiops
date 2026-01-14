@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>K8s AI Assistant v2</title>
+    <style>
+        :root {
+            --bg-primary: #1a1d2e;
+            --bg-secondary: #22263a;
+            --bg-tertiary: #2a2f45;
+            --bg-card: #252936;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-primary: #667eea;
+            --accent-secondary: #764ba2;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-error: #ef4444;
+            --border-color: #3a3f58;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            height: 100vh;
+            overflow: hidden;
+            padding: 12px;
+            color: var(--text-primary);
+        }
+        
+        .container {
+            height: calc(100vh - 24px);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        /* Top Bar - Header, Stats, Controls */
+        .top-bar {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 10px;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+        }
+        
+        /* Header */
+        .header h1 {
+            font-size: 20px;
+            color: var(--accent-primary);
+            margin-bottom: 2px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        .header-badges {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+            align-items: center;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .status-badge.online {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-success);
+            border: 1px solid var(--accent-success);
+        }
+        
+        .status-badge.offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-error);
+            border: 1px solid var(--accent-error);
+        }
+        
+        .platform-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(102, 126, 234, 0.2);
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-primary);
+        }
+        
+        .platform-badge.aks-arc {
+            background: rgba(0, 120, 212, 0.2);
+            color: #60a5fa;
+            border: 1px solid #60a5fa;
+        }
+        
+        .platform-badge.k3s {
+            background: rgba(251, 146, 60, 0.2);
+            color: #fb923c;
+            border: 1px solid #fb923c;
+        }
+        
+        /* Cluster Stats */
+        .stats {
+            width: 260px;
+        }
+        
+        .stats h2 {
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .stat-grid {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            padding: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 5px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 9px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* AKS Arc Panel */
+        .aksarc-panel {
+            margin-top: 10px;
+        }
+        
+        .aksarc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .aksarc-header h2 {
+            font-size: 13px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .diagnostic-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .diagnostic-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .aksarc-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 5px;
+        }
+        
+        .info-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        
+        .info-value {
+            font-size: 10px;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Foundry Controls */
+        .foundry {
+            width: 200px;
+        }
+        
+        .foundry h2 {
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .foundry-status {
+            padding: 6px;
+            border-radius: 5px;
+            background: var(--bg-tertiary);
+            margin-bottom: 6px;
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+        
+        .foundry-status.running {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-success);
+            border: 1px solid var(--accent-success);
+        }
+        
+        .foundry-status.stopped {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-error);
+            border: 1px solid var(--accent-error);
+        }
+        
+        .model-select {
+            width: 100%;
+            padding: 5px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 11px;
+            margin-bottom: 5px;
+        }
+        
+        .model-select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .control-button {
+            width: 100%;
+            padding: 5px;
+            border-radius: 4px;
+            border: none;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 4px;
+            transition: opacity 0.2s;
+        }
+        
+        .control-button:hover {
+            opacity: 0.9;
+        }
+        
+        .control-button.start {
+            background: #28a745;
+            color: white;
+        }
+        
+        .control-button.stop {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .control-button.restart {
+            background: #ffc107;
+            color: var(--text-primary);
+        }
+        
+        /* Prompts Row */
+        .prompts-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+        
+        .prompt-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.15s;
+            border: none;
+            text-align: left;
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .prompt-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .prompt-card h3 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+        
+        .prompt-card p {
+            font-size: 10px;
+            opacity: 0.9;
+            line-height: 1.3;
+        }
+        
+        /* Chat Section */
+        .chat-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        
+        .chat-container {
+            background: white;
+            border-radius: 8px;
+            padding: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .chat-header {
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 0;
+            min-height: 0;
+        }
+        
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            opacity: 0.3;
+        }
+        
+        .empty-state-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .empty-state-subtext {
+            font-size: 11px;
+            margin-top: 4px;
+        }
+        
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-header h2 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        
+        .close-button {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 20px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .close-button:hover {
+            background: var(--accent-error);
+            color: white;
+            border-color: var(--accent-error);
+        }
+        
+        .topology-container {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+        }
+        
+        .topology-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .topology-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .topology-section {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .topology-section h3 {
+            color: var(--accent-primary);
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .topology-item {
+            background: var(--bg-secondary);
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent-primary);
+        }
+        
+        .topology-item-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 12px;
+        }
+        
+        .topology-item-details {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        .topology-pod {
+            border-left-color: var(--accent-success);
+        }
+        
+        .topology-node {
+            border-left-color: var(--accent-warning);
+        }
+        
+        .topology-namespace {
+            border-left-color: var(--accent-primary);
+        }
+        
+        /* Enhanced Topology Styles */
+        .topology-summary {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+        }
+        
+        .summary-item {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .summary-item strong {
+            display: block;
+            font-size: 20px;
+            color: var(--accent-primary);
+            margin-bottom: 4px;
+        }
+        
+        .communication-matrix {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .comm-flow {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        .comm-source, .comm-target {
+            padding: 4px 8px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .comm-arrow {
+            color: var(--accent-primary);
+            font-weight: bold;
+        }
+        
+        .comm-details {
+            margin-left: auto;
+            padding: 2px 6px;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .dependency-card {
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--accent-primary);
+        }
+        
+        .dependency-card h4 {
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .port-list {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+        
+        .port-badge {
+            background: var(--bg-tertiary);
+            color: var(--accent-primary);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .ip-badge {
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-family: 'Courier New', monospace;
+            display: inline-block;
+            margin: 0 4px;
+            font-weight: 500;
+        }
+        
+        .action-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .target-pods {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--accent-warning);
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+            color: var(--accent-warning);
+            font-size: 11px;
+        }
+        
+        .connectivity-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .connectivity-item {
+            padding: 6px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        .connectivity-item strong {
+            color: var(--text-primary);
+        }
+        
+        /* Diagnostic Styles */
+        .diagnostic-container {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(80vh - 60px);
+        }
+        
+        .diagnostic-summary {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+        }
+        
+        .summary-stat {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .summary-stat strong {
+            display: block;
+            font-size: 24px;
+            color: var(--accent-success);
+            margin-bottom: 4px;
+        }
+        
+        .summary-stat.error strong {
+            color: var(--accent-error);
+        }
+        
+        .diagnostic-results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .diagnostic-result {
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid var(--accent-success);
+        }
+        
+        .diagnostic-result.error {
+            border-left-color: var(--accent-error);
+        }
+        
+        .result-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        
+        .result-message {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .result-recommendation {
+            font-size: 11px;
+            color: var(--accent-warning);
+            background: rgba(245, 158, 11, 0.1);
+            padding: 6px;
+            border-radius: 4px;
+            margin-top: 6px;
+        }
+        
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            max-width: 85%;
+        }
+        
+        .message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+        }
+        
+        .message.assistant {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .message-content {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .chat-input {
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .input-group input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-radius: 20px;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .input-group input:focus {
+            border-color: var(--accent-primary);
+        }
+        
+        .input-group input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .send-button {
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        
+        .send-button:hover {
+            transform: scale(1.02);
+        }
+        
+        .send-button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Top Bar: Header, Stats, Controls -->
+        <div class="top-bar">
+            <!-- Header -->
+            <div class="card header">
+                <h1>🤖 K8s AI Assistant</h1>
+                <p>Chat with your Kubernetes cluster in natural language</p>
+                <div class="header-badges">
+                    <span class="status-badge offline" id="statusBadge">🔴 Offline</span>
+                    <span class="platform-badge" id="platformBadge" style="display: none;"></span>
+                </div>
+            </div>
+            
+            <!-- Cluster Stats -->
+            <div class="card stats">
+                <h2>📊 Cluster Stats</h2>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="podCount">-</span>
+                        <span class="stat-label">Pods</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="nodeCount">-</span>
+                        <span class="stat-label">Nodes</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="namespaceCount">-</span>
+                        <span class="stat-label">Namespaces</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Foundry Controls -->
+            <div class="card foundry">
+                <h2>🤖 Foundry Control</h2>
+                <div id="foundryStatusText" class="foundry-status">Checking...</div>
+                <select class="model-select" id="modelSelect" title="Select AI model to run" aria-label="Model selection">
+                    <option value="">Loading models...</option>
+                </select>
+                <button class="control-button start" id="startBtn" onclick="startFoundry()">▶️ Start</button>
+                <button class="control-button stop" id="stopBtn" onclick="stopFoundry()" style="display:none;">⏹️ Stop</button>
+                <button class="control-button restart" id="restartBtn" onclick="restartFoundry()" style="display:none;">🔄 Restart</button>
+            </div>
+        </div>
+        
+        <!-- Quick Actions Bar -->
+        <div class="card" style="padding: 12px; margin-bottom: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <h3 style="margin: 0; color: white; font-size: 1em; flex-shrink: 0;">⚡ Quick Actions:</h3>
+                <button class="action-button" onclick="showAksArcDiagnostics()" title="Run cluster diagnostics and troubleshooting">
+                    🔍 Diagnostics & Logs
+                </button>
+                <button class="action-button" onclick="showTopology()" title="View cluster network topology">
+                    🗺️ Network Topology
+                </button>
+                <button class="action-button" onclick="askQuestion('Show me pod logs for the last hour')" title="Quick access to recent logs">
+                    📋 Recent Logs
+                </button>
+                <button class="action-button" onclick="askQuestion('Check for any failing pods or errors')" title="Health check">
+                    🏥 Health Check
+                </button>
+            </div>
+        </div>
+        
+        <!-- AKS Arc Info Panel (shown when AKS Arc detected) -->
+        <div class="card aksarc-panel" id="aksarcPanel" style="display: none;">
+            <div class="aksarc-header">
+                <h2>☁️ AKS Arc Cluster</h2>
+                <button class="diagnostic-button" id="diagnosticsBtn" onclick="showAksArcDiagnostics()">🔍 Run Diagnostics</button>
+            </div>
+            <div class="aksarc-info" id="aksarcInfo">
+                <div class="info-item">
+                    <span class="info-label">Cluster:</span>
+                    <span class="info-value" id="clusterName">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Location:</span>
+                    <span class="info-value" id="clusterLocation">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Resource ID:</span>
+                    <span class="info-value" id="clusterResourceId">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Prompts -->
+        <div class="prompts-row">
+            <button class="prompt-card" onclick="askQuestion('Show me all running pods')">
+                <h3>🚀 Running Pods</h3>
+                <p>View all active pods</p>
+            </button>
+            <button class="prompt-card" onclick="askQuestion('Check cluster health and control plane status')">
+                <h3>💚 Health Check</h3>
+                <p>Control plane & nodes</p>
+            </button>
+            <button class="prompt-card" onclick="askQuestion('Show me recent pod restarts and failures')">
+                <h3>🔄 Restarts</h3>
+                <p>Recent pod restarts</p>
+            </button>
+            <button class="prompt-card" onclick="askQuestion('Show node pool status and resource usage')">
+                <h3>🖥️ Node Pools</h3>
+                <p>Node pool health</p>
+            </button>
+            <button class="prompt-card" onclick="askQuestion('Show me system pods and Arc agents')">
+                <h3>⚙️ System Pods</h3>
+                <p>System & Arc agents</p>
+            </button>
+            <button class="prompt-card" onclick="askQuestion('Check for any warnings or issues')">
+                <h3>⚠️ Diagnostics</h3>
+                <p>Troubleshoot issues</p>
+            </button>
+            <button class="prompt-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);" onclick="showTopology()">
+                <h3>🗺️ Topology</h3>
+                <p>Network visualization</p>
+            </button>
+        </div>
+        
+        <!-- Topology Modal -->
+        <div id="topologyModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🗺️ Cluster Network Topology</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="action-button" onclick="exportTopology()" title="Export topology data">💾 Export</button>
+                        <button class="close-button" onclick="closeTopology()">✕</button>
+                    </div>
+                </div>
+                <div id="topologyView" class="topology-container">
+                    <div class="topology-loading">Loading topology...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Section -->
+        <div class="chat-section">
+            <div class="chat-container card">
+                <div class="chat-header">💬 Start a conversation</div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💬</div>
+                        <div class="empty-state-text">Start a conversation</div>
+                        <div class="empty-state-subtext">Click a quick prompt or type your question below</div>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <div class="input-group">
+                        <input type="text" id="userInput" placeholder="Ask about your cluster... (e.g., 'Show me all pods')" onkeypress="handleKeyPress(event)">
+                        <button class="send-button" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 K8s AI Assistant v2.0 - Script loaded');
+        
+        const API_BASE = 'http://localhost:8000/api';
+        let conversationHistory = [];
+
+        // Initialize
+        async function init() {
+            console.log('🔄 Initializing application...');
+            await detectPlatform();
+            await updateClusterStats();
+            await checkFoundryStatus();
+            
+            // Refresh every 30 seconds
+            setInterval(() => {
+                updateClusterStats();
+                checkFoundryStatus();
+            }, 30000);
+            
+            console.log('✅ Initialization complete');
+        }
+        
+        // Detect Kubernetes platform
+        async function detectPlatform() {
+            try {
+                const response = await fetch(`${API_BASE}/platform/detect`);
+                const data = await response.json();
+                
+                console.log('Platform detected:', data);
+                
+                const badge = document.getElementById('platformBadge');
+                const aksarcPanel = document.getElementById('aksarcPanel');
+                
+                if (data.type === 'aks-arc') {
+                    badge.textContent = '☁️ AKS Arc';
+                    badge.className = 'platform-badge aks-arc';
+                    badge.style.display = 'inline-flex';
+                    
+                    // Show AKS Arc panel
+                    aksarcPanel.style.display = 'block';
+                    document.getElementById('clusterName').textContent = data.name || 'Unknown';
+                    document.getElementById('clusterLocation').textContent = data.location || 'N/A';
+                    document.getElementById('clusterResourceId').textContent = data.resource_id || 'N/A';
+                } else if (data.type === 'k3s') {
+                    badge.textContent = '🚀 k3s';
+                    badge.className = 'platform-badge k3s';
+                    badge.style.display = 'inline-flex';
+                    aksarcPanel.style.display = 'none';
+                } else {
+                    badge.textContent = '⎈ Kubernetes';
+                    badge.className = 'platform-badge';
+                    badge.style.display = 'inline-flex';
+                    aksarcPanel.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error detecting platform:', error);
+            }
+        }
+
+        // Update cluster statistics
+        async function updateClusterStats() {
+            try {
+                const response = await fetch(`${API_BASE}/cluster/status`);
+                const data = await response.json();
+                
+                // Extract counts from the actual data structure
+                const podCount = data.pods ? data.pods.length : 0;
+                const namespaces = data.pods ? [...new Set(data.pods.map(p => p.namespace))] : [];
+                const nodes = data.pods ? [...new Set(data.pods.map(p => p.node))] : [];
+                
+                document.getElementById('podCount').textContent = podCount;
+                document.getElementById('nodeCount').textContent = nodes.length;
+                document.getElementById('namespaceCount').textContent = namespaces.length;
+            } catch (error) {
+                console.error('Error fetching cluster stats:', error);
+                document.getElementById('podCount').textContent = '-';
+                document.getElementById('nodeCount').textContent = '-';
+                document.getElementById('namespaceCount').textContent = '-';
+            }
+        }
+
+        // Check Foundry status
+        async function checkFoundryStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/foundry/status`);
+                const data = await response.json();
+                
+                console.log('Foundry status response:', data);
+                
+                const statusDiv = document.getElementById('foundryStatusText');
+                const modelSelect = document.getElementById('modelSelect');
+                const startBtn = document.getElementById('startBtn');
+                const stopBtn = document.getElementById('stopBtn');
+                const restartBtn = document.getElementById('restartBtn');
+                const statusBadge = document.getElementById('statusBadge');
+                
+                if (!data.installed) {
+                    statusDiv.textContent = '❌ Foundry not installed';
+                    statusDiv.className = 'foundry-status stopped';
+                    modelSelect.innerHTML = '<option value="">Not available</option>';
+                    startBtn.style.display = 'none';
+                    stopBtn.style.display = 'none';
+                    restartBtn.style.display = 'none';
+                    statusBadge.textContent = '🔴 Offline';
+                    statusBadge.className = 'status-badge offline';
+                } else if (data.running) {
+                    statusDiv.textContent = `🟢 Running: ${data.model || 'active'}`;
+                    statusDiv.className = 'foundry-status running';
+                    statusBadge.textContent = '🟢 Online';
+                    statusBadge.className = 'status-badge online';
+                    startBtn.style.display = 'none';
+                    stopBtn.style.display = 'block';
+                    restartBtn.style.display = 'block';
+                    
+                    // Populate models
+                    if (data.available_models && data.available_models.length > 0) {
+                        console.log('Populating', data.available_models.length, 'models');
+                        
+                        // Separate downloaded and not downloaded
+                        const downloaded = data.available_models.filter(m => typeof m === 'object' && m.downloaded);
+                        const notDownloaded = data.available_models.filter(m => typeof m === 'string' || !m.downloaded);
+                        
+                        let optionsHTML = '';
+                        
+                        if (downloaded.length > 0) {
+                            optionsHTML += '<optgroup label="✅ Ready to Use">';
+                            downloaded.forEach(m => {
+                                const modelName = m.name;
+                                optionsHTML += `<option value="${modelName}">${modelName} ⚡</option>`;
+                            });
+                            optionsHTML += '</optgroup>';
+                        }
+                        
+                        if (notDownloaded.length > 0) {
+                            optionsHTML += '<optgroup label="📦 Will Download">';
+                            notDownloaded.forEach(m => {
+                                const modelName = typeof m === 'string' ? m : m.name;
+                                optionsHTML += `<option value="${modelName}">${modelName} (download required)</option>`;
+                            });
+                            optionsHTML += '</optgroup>';
+                        }
+                        
+                        modelSelect.innerHTML = optionsHTML;
+                    }
+                } else {
+                    statusDiv.textContent = '🔴 Foundry not running';
+                    statusDiv.className = 'foundry-status stopped';
+                    statusBadge.textContent = '🔴 Offline';
+                    statusBadge.className = 'status-badge offline';
+                    startBtn.style.display = 'block';
+                    stopBtn.style.display = 'none';
+                    restartBtn.style.display = 'none';
+                    
+                    // Populate models
+                    if (data.available_models && data.available_models.length > 0) {
+                        console.log('Populating', data.available_models.length, 'models (not running)');
+                        
+                        // Add a default "Select a model..." option
+                        let options = '<option value="">📋 Select a model...</option>';
+                        options += data.available_models.map(m => {
+                            const modelName = typeof m === 'string' ? m : m.name;
+                            const downloaded = typeof m === 'object' && m.downloaded;
+                            const icon = downloaded ? '✅ ' : '📦 ';
+                            const suffix = downloaded ? ' (ready - no download needed)' : ' (will download on first use)';
+                            return `<option value="${modelName}">${icon}${modelName}${suffix}</option>`;
+                        }).join('');
+                        modelSelect.innerHTML = options;
+                        
+                        // Enable start button now that models are loaded
+                        startBtn.disabled = false;
+                    } else {
+                        console.log('No models found in response');
+                        modelSelect.innerHTML = '<option value="">No models found</option>';
+                        startBtn.disabled = true;
+                        startBtn.title = 'No models available';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking Foundry status:', error);
+            }
+        }
+
+        // Start Foundry
+        async function startFoundry() {
+            const modelSelect = document.getElementById('modelSelect');
+            const model = modelSelect.value;
+            
+            if (!model || model === '') {
+                showFoundryMessage('Please select a model first', 'error');
+                modelSelect.focus();
+                return;
+            }
+            
+            // Disable button during startup
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = true;
+            startBtn.textContent = '⏳ Starting...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/foundry/start?model=${model}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Just refresh status - no alert popup
+                    await checkFoundryStatus();
+                } else {
+                    // Show error in the foundry control area
+                    showFoundryMessage(data.message, 'error');
+                    startBtn.disabled = false;
+                    startBtn.textContent = '▶️ Start';
+                }
+            } catch (error) {
+                showFoundryMessage(`Error: ${error.message}`, 'error');
+                startBtn.disabled = false;
+                startBtn.textContent = '▶️ Start';
+            }
+        }
+
+        // Show message in foundry control area
+        function showFoundryMessage(message, type = 'info') {
+            const foundryCard = document.querySelector('.foundry');
+            let messageDiv = document.getElementById('foundryMessage');
+            
+            if (!messageDiv) {
+                messageDiv = document.createElement('div');
+                messageDiv.id = 'foundryMessage';
+                messageDiv.style.cssText = `
+                    margin-top: 8px;
+                    padding: 8px;
+                    border-radius: 4px;
+                    font-size: 11px;
+                    line-height: 1.4;
+                `;
+                foundryCard.appendChild(messageDiv);
+            }
+            
+            // Set color based on type
+            if (type === 'error') {
+                messageDiv.style.background = 'rgba(239, 68, 68, 0.2)';
+                messageDiv.style.border = '1px solid var(--accent-error)';
+                messageDiv.style.color = 'var(--accent-error)';
+            } else if (type === 'success') {
+                messageDiv.style.background = 'rgba(16, 185, 129, 0.2)';
+                messageDiv.style.border = '1px solid var(--accent-success)';
+                messageDiv.style.color = 'var(--accent-success)';
+            } else {
+                messageDiv.style.background = 'rgba(102, 126, 234, 0.2)';
+                messageDiv.style.border = '1px solid var(--accent-primary)';
+                messageDiv.style.color = 'var(--accent-primary)';
+            }
+            
+            messageDiv.textContent = message;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (messageDiv) messageDiv.remove();
+            }, 5000);
+        }
+
+        // Stop Foundry
+        async function stopFoundry() {
+            try {
+                const response = await fetch(`${API_BASE}/foundry/stop`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    await checkFoundryStatus();
+                } else {
+                    showFoundryMessage(data.message, 'error');
+                }
+            } catch (error) {
+                showFoundryMessage(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Restart Foundry
+        async function restartFoundry() {
+            const modelSelect = document.getElementById('modelSelect');
+            const model = modelSelect.value;
+            
+            if (!model) {
+                showFoundryMessage('Please select a model first', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/foundry/restart?model=${model}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    await checkFoundryStatus();
+                } else {
+                    showFoundryMessage(data.message, 'error');
+                }
+            } catch (error) {
+                showFoundryMessage(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Ask a question
+        function askQuestion(question) {
+            document.getElementById('userInput').value = question;
+            sendMessage();
+        }
+
+        // Handle Enter key
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const question = input.value.trim();
+            
+            if (!question) return;
+            
+            input.value = '';
+            
+            // Add user message to chat
+            addMessage('user', question);
+            
+            try {
+                const response = await fetch(`${API_BASE}/chat/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: question })
+                });
+                
+                const data = await response.json();
+                
+                // Add assistant response to chat (with markdown-style formatting)
+                const answer = data.response || 'No response received';
+                addMessage('assistant', answer);
+                
+            } catch (error) {
+                addMessage('assistant', `Error: ${error.message}`);
+            }
+        }
+        
+        // Show topology visualization
+        async function showTopology() {
+            const modal = document.getElementById('topologyModal');
+            const container = document.getElementById('topologyView');
+            modal.style.display = 'flex';
+            
+            try {
+                const response = await fetch(`${API_BASE}/topology/analyze`);
+                const data = await response.json();
+                
+                console.log('Topology data:', data);
+                
+                // Store for export functionality
+                window.topologyData = data;
+                
+                // Build enhanced topology with network dependencies
+                renderNetworkTopology(container, data);
+                
+            } catch (error) {
+                container.innerHTML = `<div style="color: var(--accent-error); text-align: center;">Error loading topology: ${error.message}</div>`;
+            }
+        }
+        
+        // Render network topology with D3.js-style visualization
+        function renderNetworkTopology(container, data) {
+            // Safe access with default empty arrays
+            const pods = data.pods || [];
+            const services = data.services || [];
+            const dependencies = data.dependencies || [];
+            const networkPolicies = data.network_policies || [];
+            const communicationMatrix = data.communication_matrix || [];
+            
+            let html = '<div class="topology-summary">';
+            html += `<div class="summary-item"><strong>${pods.length}</strong> Pods</div>`;
+            html += `<div class="summary-item"><strong>${services.length}</strong> Services</div>`;
+            html += `<div class="summary-item"><strong>${dependencies.length}</strong> Dependencies</div>`;
+            html += `<div class="summary-item"><strong>${networkPolicies.length}</strong> Network Policies</div>`;
+            html += '</div>';
+            
+            // Communication matrix
+            if (communicationMatrix && communicationMatrix.length > 0) {
+                html += '<div class="topology-section">';
+                html += '<h3>🔗 Service Communication Matrix</h3>';
+                html += '<div class="communication-matrix">';
+                
+                communicationMatrix.forEach(comm => {
+                    // Find pod IPs
+                    const sourcePod = pods.find(p => p.name === comm.source);
+                    const targetPod = pods.find(p => p.name === comm.target);
+                    
+                    html += '<div class="comm-flow">';
+                    html += `<div class="comm-source">${comm.source}`;
+                    if (sourcePod && sourcePod.ip) {
+                        html += ` <span class="ip-badge" title="Pod IP">📍 ${sourcePod.ip}</span>`;
+                    }
+                    html += '</div>';
+                    html += '<div class="comm-arrow">→</div>';
+                    html += `<div class="comm-target">${comm.target}`;
+                    if (targetPod && targetPod.ip) {
+                        html += ` <span class="ip-badge" title="Pod IP">📍 ${targetPod.ip}</span>`;
+                    }
+                    html += '</div>';
+                    html += `<div class="comm-details">${comm.protocol}:${comm.port}`;
+                    if (comm.target_port) {
+                        html += `→${comm.target_port}`;
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            // Dependencies
+            if (dependencies && dependencies.length > 0) {
+                html += '<div class="topology-section">';
+                html += '<h3>🎯 Service Dependencies</h3>';
+                
+                dependencies.forEach(dep => {
+                    // Find service details
+                    const service = services.find(s => s.name === dep.service && s.namespace === dep.namespace);
+                    
+                    html += '<div class="dependency-card">';
+                    html += `<h4>${dep.service} (${dep.namespace})</h4>`;
+                    
+                    // Show service IPs
+                    if (service) {
+                        html += '<div class="service-ips" style="margin: 8px 0; font-size: 0.9em;">';
+                        if (service.cluster_ip) {
+                            html += `<span class="ip-badge" title="Cluster IP">🌐 ${service.cluster_ip}</span> `;
+                        }
+                        if (service.external_ip && service.external_ip !== 'None') {
+                            html += `<span class="ip-badge" title="External IP" style="background: #4a90e2; color: white;">🌍 ${service.external_ip}</span>`;
+                        }
+                        html += '</div>';
+                    }
+                    
+                    if (dep.service_ports && dep.service_ports.length > 0) {
+                        html += '<div class="port-list">';
+                        dep.service_ports.forEach(port => {
+                            html += `<span class="port-badge">${port.protocol}:${port.port}→${port.target_port}</span>`;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    // Show target pods with IPs
+                    if (dep.target_pods && dep.target_pods.length > 0) {
+                        html += '<div class="target-pods" style="margin-top: 10px;">';
+                        html += `<strong>Target Pods (${dep.target_pods.length}):</strong><br>`;
+                        dep.target_pods.forEach(podName => {
+                            const pod = pods.find(p => p.name === podName);
+                            html += `<div style="margin: 4px 0; padding-left: 10px;">→ ${podName}`;
+                            if (pod && pod.ip) {
+                                html += ` <span class="ip-badge" title="Pod IP">📍 ${pod.ip}</span>`;
+                            }
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    } else {
+                        html += `<div class="target-pods">→ ${dep.target_pods ? dep.target_pods.length : 0} target pod(s)</div>`;
+                    }
+                    
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+            }
+            
+            // Network policies
+            if (data.network_policy_analysis && data.network_policy_analysis.affected_pods) {
+                html += '<div class="topology-section">';
+                html += '<h3>🛡️ Network Policy Coverage</h3>';
+                html += `<p>${data.network_policy_analysis.affected_pods.length} pods affected by network policies</p>`;
+                if (data.network_policy_analysis.unrestricted_namespaces && 
+                    data.network_policy_analysis.unrestricted_namespaces.length > 0) {
+                    html += '<div class="warning-box">';
+                    html += '<strong>⚠️ Unrestricted Namespaces:</strong> ';
+                    html += data.network_policy_analysis.unrestricted_namespaces.join(', ');
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+            
+            // Namespace connectivity
+            if (data.namespace_connectivity) {
+                html += '<div class="topology-section">';
+                html += '<h3>🌐 Namespace Connectivity</h3>';
+                html += '<div class="connectivity-grid">';
+                
+                Object.entries(data.namespace_connectivity).forEach(([ns, info]) => {
+                    const targets = info.can_access || [];
+                    const policyStatus = info.has_policies ? '🔒' : '🔓';
+                    html += '<div class="connectivity-item">';
+                    html += `<strong>${policyStatus} ${ns}</strong> (${info.pod_count} pods) → ${targets.join(', ')}`;
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        // Close topology modal
+        function closeTopology() {
+            document.getElementById('topologyModal').style.display = 'none';
+        }
+        
+        // Export topology data to JSON file
+        function exportTopology() {
+            if (!window.topologyData) {
+                alert('No topology data available to export');
+                return;
+            }
+            
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `topology-${timestamp}.json`;
+            
+            const exportData = {
+                exported_at: new Date().toISOString(),
+                cluster_info: {
+                    pods: window.topologyData.pods?.length || 0,
+                    services: window.topologyData.services?.length || 0,
+                    dependencies: window.topologyData.dependencies?.length || 0,
+                    network_policies: window.topologyData.network_policies?.length || 0
+                },
+                topology: window.topologyData
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            console.log(`Topology exported to ${filename}`);
+        }
+        
+        // Show AKS Arc diagnostics modal
+        async function showAksArcDiagnostics() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>🔍 Cluster Diagnostics</h2>
+                        <button class="close-button" onclick="this.closest('.modal').remove()">✕</button>
+                    </div>
+                    <div class="diagnostic-container">
+                        <div id="diagnosticResults">
+                            <div class="topology-loading">
+                                <div style="margin-bottom: 10px;">⏳ Initializing diagnostics...</div>
+                                <div id="diagnosticProgress" style="font-size: 0.9em; color: #888;"></div>
+                            </div>
+                        </div>
+                        <button class="diagnostic-button" onclick="runDiagnosticRemediation()" id="remediateBtn" style="display:none; margin-top: 12px;">
+                            🔧 Run Auto-Remediation
+                        </button>
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'flex';
+            document.body.appendChild(modal);
+            
+            // Update progress
+            const updateProgress = (msg) => {
+                const progressDiv = document.getElementById('diagnosticProgress');
+                if (progressDiv) progressDiv.textContent = msg;
+            };
+            
+            // Check prerequisites first
+            try {
+                updateProgress('Step 1/3: Checking prerequisites...');
+                const checkResp = await fetch(`${API_BASE}/aksarc/diagnostics/check`);
+                const checkData = await checkResp.json();
+                
+                if (!checkData.support_module_available) {
+                    updateProgress('Step 2/3: AKS Arc module not found, running basic diagnostics...');
+                    
+                    // Run basic K8s diagnostics instead
+                    await runBasicDiagnostics();
+                    return;
+                }
+                
+                // Run AKS Arc diagnostics
+                updateProgress('Step 2/3: Running AKS Arc diagnostics...');
+                const diagResp = await fetch(`${API_BASE}/aksarc/diagnostics/run`);
+                const diagData = await diagResp.json();
+                
+                updateProgress('Step 3/3: Rendering results...');
+                renderDiagnosticResults(diagData);
+                
+            } catch (error) {
+                console.error('Diagnostics error:', error);
+                document.getElementById('diagnosticResults').innerHTML = `
+                    <div class="warning-box" style="border-color: var(--accent-error);">
+                        <p><strong>❌ Diagnostics Error</strong></p>
+                        <p>${error.message}</p>
+                        <p style="font-size: 0.9em; margin-top: 10px;">Tip: Check that the backend is running and kubectl is configured</p>
+                        <button class="diagnostic-button" onclick="runBasicDiagnostics()">Run Basic Checks</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Run basic Kubernetes diagnostics (fallback when AKS Arc module unavailable)
+        async function runBasicDiagnostics() {
+            const resultsDiv = document.getElementById('diagnosticResults');
+            
+            try {
+                // Run parallel checks
+                const checks = [
+                    { name: 'Cluster Connection', endpoint: '/cluster/status' },
+                    { name: 'Pod Health', endpoint: '/cluster/pods' },
+                    { name: 'Service Health', endpoint: '/topology' },
+                    { name: 'Platform Detection', endpoint: '/platform/detect' }
+                ];
+                
+                resultsDiv.innerHTML = '<div class="topology-loading">Running basic cluster checks...</div>';
+                
+                const results = await Promise.allSettled(
+                    checks.map(async check => {
+                        const resp = await fetch(`${API_BASE}${check.endpoint}`);
+                        const data = await resp.json();
+                        return { check, data, status: resp.ok };
+                    })
+                );
+                
+                let html = '<div class="diagnostic-summary">';
+                const passed = results.filter(r => r.status === 'fulfilled' && r.value.status).length;
+                const failed = results.length - passed;
+                html += `<div class="summary-stat"><strong>${passed}</strong> Passed</div>`;
+                html += `<div class="summary-stat error"><strong>${failed}</strong> Failed</div>`;
+                html += `<div class="summary-stat"><strong>${results.length}</strong> Total</div>`;
+                html += '</div>';
+                
+                html += '<div class="diagnostic-results-list">';
+                results.forEach((result, idx) => {
+                    const check = checks[idx];
+                    if (result.status === 'fulfilled' && result.value.status) {
+                        html += `
+                            <div class="diagnostic-result success">
+                                <div class="result-header">✅ ${check.name}</div>
+                                <div class="result-message">API endpoint responding normally</div>
+                            </div>
+                        `;
+                    } else {
+                        const error = result.reason?.message || 'Failed to connect';
+                        html += `
+                            <div class="diagnostic-result error">
+                                <div class="result-header">❌ ${check.name}</div>
+                                <div class="result-message">${error}</div>
+                                <div class="result-recommendation">💡 Check kubectl configuration and cluster connectivity</div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                // Add info about AKS Arc module
+                html += `
+                    <div class="diagnostic-result" style="background: rgba(59, 130, 246, 0.1); border-color: #3b82f6;">
+                        <div class="result-header">ℹ️ AKS Arc Advanced Diagnostics</div>
+                        <div class="result-message">Support.AksArc PowerShell module not installed</div>
+                        <div class="result-recommendation">
+                            For AKS Arc clusters, install the module for advanced diagnostics:
+                            <button class="diagnostic-button" style="margin-top: 8px; font-size: 0.9em;" onclick="installDiagnosticTools()">Install AKS Arc Module</button>
+                        </div>
+                    </div>
+                `;
+                
+                html += '</div>';
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div style="color: var(--accent-error);">
+                        <p>❌ Error running diagnostics</p>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Install diagnostic tools
+        async function installDiagnosticTools() {
+            const resultsDiv = document.getElementById('diagnosticResults');
+            resultsDiv.innerHTML = '<div class="topology-loading">Installing Support.AksArc module...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/aksarc/diagnostics/install`, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div style="color: var(--accent-success);">
+                            <p>✅ Module installed successfully!</p>
+                            <button class="diagnostic-button" onclick="showAksArcDiagnostics()">Run Diagnostics</button>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<div style="color: var(--accent-error);">Installation failed: ${data.error}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div style="color: var(--accent-error);">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Render diagnostic results
+        function renderDiagnosticResults(data) {
+            const resultsDiv = document.getElementById('diagnosticResults');
+            let html = '<div class="diagnostic-summary">';
+            html += `<div class="summary-stat"><strong>${data.passed}</strong> Passed</div>`;
+            html += `<div class="summary-stat error"><strong>${data.failed}</strong> Failed</div>`;
+            html += `<div class="summary-stat"><strong>${data.total_tests}</strong> Total</div>`;
+            html += '</div>';
+            
+            html += '<div class="diagnostic-results-list">';
+            data.results.forEach(result => {
+                const statusIcon = result.status === 'Passed' ? '✅' : '❌';
+                const statusClass = result.status === 'Passed' ? 'success' : 'error';
+                
+                html += `<div class="diagnostic-result ${statusClass}">`;
+                html += `<div class="result-header">${statusIcon} ${result.test_name}</div>`;
+                html += `<div class="result-message">${result.message}</div>`;
+                if (result.recommendation) {
+                    html += `<div class="result-recommendation">💡 ${result.recommendation}</div>`;
+                }
+                html += '</div>';
+            });
+            html += '</div>';
+            
+            resultsDiv.innerHTML = html;
+            
+            // Show remediate button if there are failures
+            if (data.failed > 0) {
+                document.getElementById('remediateBtn').style.display = 'block';
+            }
+        }
+        
+        // Run automatic remediation
+        async function runDiagnosticRemediation() {
+            const resultsDiv = document.getElementById('diagnosticResults');
+            resultsDiv.innerHTML = '<div class="topology-loading">Running auto-remediation...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/aksarc/diagnostics/remediate`, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div style="color: var(--accent-success);">
+                            <p>✅ Remediation completed!</p>
+                            <p>${data.message}</p>
+                            <button class="diagnostic-button" onclick="showAksArcDiagnostics()">Re-run Diagnostics</button>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<div style="color: var(--accent-error);">Remediation failed: ${data.error}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div style="color: var(--accent-error);">Error: ${error.message}</div>`;
+            }
+        }
+
+
+        // Add message to chat
+        function addMessage(role, content) {
+            const messagesDiv = document.getElementById('chatMessages');
+            
+            // Remove empty state if present
+            const emptyState = messagesDiv.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            // Simple markdown-style formatting for Direct Mode responses
+            let formattedContent = content
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')  // **bold**
+                .replace(/^• (.+)$/gm, '<div style="margin-left: 12px;">• $1</div>')  // bullet points
+                .replace(/\n/g, '<br>');  // line breaks
+            
+            contentDiv.innerHTML = formattedContent;
+            
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Diagnostics Progress</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a2e; color: #fff; }
+        .test-section { margin: 20px 0; padding: 20px; background: #16213e; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #667eea; color: white; border: none; border-radius: 6px; }
+        button:hover { background: #764ba2; }
+        #results { margin-top: 20px; padding: 15px; background: #0f0f1e; border-radius: 6px; }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Diagnostics Progress Test</h1>
+    
+    <div class="test-section">
+        <h2>Test: Diagnostics Prerequisites Check</h2>
+        <button onclick="testPrerequisites()">▶️ Test Prerequisites</button>
+        <div id="prereqResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test: Basic Diagnostics Flow</h2>
+        <button onclick="testBasicDiagnostics()">▶️ Test Basic Diagnostics</button>
+        <div id="basicResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test: Progress Indicators</h2>
+        <button onclick="testProgressFlow()">▶️ Test Progress Messages</button>
+        <div id="progressResults"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+
+        async function testPrerequisites() {
+            const div = document.getElementById('prereqResults');
+            div.innerHTML = '<p class="info">⏳ Checking prerequisites...</p>';
+            
+            try {
+                const resp = await fetch(`${API_BASE}/aksarc/diagnostics/check`);
+                const data = await resp.json();
+                
+                let html = '<h3>✅ Prerequisites Check Results:</h3><ul>';
+                html += `<li>PowerShell Available: ${data.powershell_available ? '✅' : '❌'}</li>`;
+                html += `<li>Support.AksArc Module: ${data.module_installed ? '✅' : '❌'}</li>`;
+                html += `<li>Available for Use: ${data.available ? '✅' : '❌'}</li>`;
+                html += '</ul>';
+                
+                if (!data.available) {
+                    html += '<p class="info">ℹ️ Will use fallback basic diagnostics</p>';
+                }
+                
+                div.innerHTML = html;
+            } catch (error) {
+                div.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testBasicDiagnostics() {
+            const div = document.getElementById('basicResults');
+            div.innerHTML = '<p class="info">⏳ Running basic checks...</p>';
+            
+            try {
+                const checks = [
+                    { name: 'Cluster Connection', endpoint: '/cluster' },
+                    { name: 'Pod Health', endpoint: '/pods' },
+                    { name: 'Service Health', endpoint: '/services' },
+                    { name: 'Node Status', endpoint: '/nodes' }
+                ];
+                
+                const results = await Promise.allSettled(
+                    checks.map(async check => {
+                        const resp = await fetch(`${API_BASE}${check.endpoint}`);
+                        return { check, ok: resp.ok, status: resp.status };
+                    })
+                );
+                
+                let html = '<h3>Basic Diagnostics Results:</h3><ul>';
+                results.forEach((result, idx) => {
+                    const check = checks[idx];
+                    if (result.status === 'fulfilled' && result.value.ok) {
+                        html += `<li class="success">✅ ${check.name} - OK (${result.value.status})</li>`;
+                    } else {
+                        html += `<li class="error">❌ ${check.name} - Failed</li>`;
+                    }
+                });
+                html += '</ul>';
+                
+                const passed = results.filter(r => r.status === 'fulfilled' && r.value.ok).length;
+                html += `<p><strong>Summary:</strong> ${passed}/${checks.length} checks passed</p>`;
+                
+                div.innerHTML = html;
+            } catch (error) {
+                div.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testProgressFlow() {
+            const div = document.getElementById('progressResults');
+            const steps = [
+                'Step 1/3: Checking prerequisites...',
+                'Step 2/3: Running diagnostics...',
+                'Step 3/3: Rendering results...'
+            ];
+            
+            div.innerHTML = '<h3>Progress Flow Simulation:</h3>';
+            
+            for (let i = 0; i < steps.length; i++) {
+                div.innerHTML += `<p class="info">${steps[i]}</p>`;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            div.innerHTML += '<p class="success">✅ All steps completed!</p>';
+        }
+    </script>
+</body>
+</html>
