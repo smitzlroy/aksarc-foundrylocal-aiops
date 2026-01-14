@@ -1,320 +1,175 @@
-# Architecture Overview
+# Quick Reference: Application Architecture
 
-## System Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        User Interfaces                          │
-├──────────────────────┬──────────────────────────────────────────┤
-│   Web UI (React)     │         CLI Tool (Python)               │
-│   Port: 3000         │         Command Line Interface          │
-└──────────┬───────────┴──────────────────┬──────────────────────┘
-           │                               │
-           │ HTTP/WebSocket                │ Direct API
-           │                               │
-┌──────────▼───────────────────────────────▼──────────────────────┐
-│                    FastAPI Backend (Python)                      │
-│                         Port: 8000                               │
-├──────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌──────────────┐  ┌────────────────────────┐ │
-│  │ API Routes  │  │  WebSocket   │  │  Context Manager       │ │
-│  │  /api/*     │  │   /ws        │  │  (In-Memory Buffer)    │ │
-│  └─────────────┘  └──────────────┘  └────────────────────────┘ │
-└───┬──────────────────────┬──────────────────────┬───────────────┘
-    │                      │                      │
-    │                      │                      │
-┌───▼──────────────┐  ┌───▼────────────┐  ┌─────▼─────────────┐
-│  Kubernetes      │  │  Foundry Local │  │  Context Service  │
-│  Watcher Service │  │  AI Service    │  │  (Data Buffer)    │
-├──────────────────┤  ├────────────────┤  ├───────────────────┤
-│ - Watch Pods     │  │ - Query Model  │  │ - Last 2hr data   │
-│ - Watch Events   │  │ - Generate     │  │ - Logs buffer     │
-│ - Watch Logs     │  │   Responses    │  │ - Events buffer   │
-│ - Collect        │  │ - Context      │  │ - Metrics buffer  │
-│   Metrics        │  │   Injection    │  │                   │
-└───┬──────────────┘  └────────────────┘  └───────────────────┘
-    │                         │
-    │                         │
-┌───▼─────────────────────────▼──────────────────────────────────┐
-│                    External Systems                             │
-├─────────────────────────────┬───────────────────────────────────┤
-│  Kubernetes Cluster         │   Azure AI Foundry Local          │
-│  (k3s local / AKS Arc)      │   Local AI Endpoint             │
-│  - Pods, Deployments        │   Model: qwen2.5-0.5b             │
-│  - Services, Events         │                                   │
-│  - Logs, Metrics            │                                   │
-└─────────────────────────────┴───────────────────────────────────┘
-```
-
-## Component Descriptions
-
-### Frontend (React + TypeScript)
-
-**Purpose:** Provides a modern, responsive web interface for interacting with the AI assistant.
-
-**Key Features:**
-- Single-page application with real-time updates
-- Chat interface for natural language queries
-- Status cards showing cluster health metrics
-- WebSocket connection for real-time streaming responses
-- Neon/vibrant color scheme inspired by Azure Arc Jumpstart
-
-**Technology Stack:**
-- React 18 with TypeScript (strict mode)
-- Vite for fast development and optimized builds
-- Tailwind CSS for styling
-- WebSocket API for real-time communication
-
-### Backend (FastAPI + Python)
-
-**Purpose:** Orchestrates data collection, AI processing, and API services.
-
-**Key Components:**
-
-#### 1. API Layer (`src/api/`)
-- **routes.py**: REST endpoints for cluster info, health checks
-- **websocket.py**: WebSocket handler for streaming chat responses
-
-#### 2. Core Layer (`src/core/`)
-- **config.py**: Application configuration using Pydantic
-- **logging.py**: Structured logging setup with JSON formatting
-- **exceptions.py**: Custom exception classes
-
-#### 3. Services Layer (`src/services/`)
-- **kubernetes.py**: Kubernetes client wrapper, watches pods/events/logs
-- **context.py**: In-memory data buffer (last 2 hours of cluster data)
-- **foundry.py**: Azure AI Foundry Local integration
-
-#### 4. Models Layer (`src/models/`)
-- **cluster.py**: Data models for cluster state (pods, events, metrics)
-- **chat.py**: Data models for chat requests/responses
-
-### Kubernetes Watcher Service
-
-**Purpose:** Continuously monitors the Kubernetes cluster and collects relevant data.
-
-**Watches:**
-- Pod status changes
-- Events (warnings, errors)
-- Container logs (streaming)
-- Basic metrics (CPU, memory usage)
-
-**Data Retention:**
-- In-memory buffer storing last 2 hours of data
-- Circular buffer implementation to prevent memory growth
-- Data indexed by timestamp for fast queries
-
-### Context Service
-
-**Purpose:** Manages the in-memory data buffer and provides context for AI queries.
-
-**Responsibilities:**
-- Store recent cluster data (2-hour rolling window)
-- Index data by resource type, namespace, timestamp
-- Provide fast retrieval for AI context injection
-- Implement efficient data structures for quick lookups
-
-**Data Types Stored:**
-- Pod states and status changes
-- Events (system events, warnings, errors)
-- Log snippets (error logs, recent logs)
-- Basic metrics (CPU/memory usage)
-
-### Foundry Local AI Service
-
-**Purpose:** Interfaces with Azure AI Foundry Local for natural language processing.
-
-**Responsibilities:**
-- Send queries to local Foundry endpoint (http://127.0.0.1:58366)
-- Inject relevant cluster context into prompts
-- Stream responses back to frontend via WebSocket
-- Handle model errors and retries
-
-**Model Configuration:**
-- Model: qwen2.5-0.5b (lightweight, fast)
-- Temperature: 0.7 (balanced creativity/accuracy)
-- Max tokens: 2048
-- Context window: ~4000 tokens
-
-## Data Flow
-
-### Query Processing Flow
+## What You Have Now (Working)
 
 ```
-1. User enters question in Web UI
-   ↓
-2. WebSocket message sent to backend
-   ↓
-3. Backend parses query and extracts intent
-   ↓
-4. Context Service retrieves relevant cluster data
-   ↓
-5. Foundry Service injects context into prompt
-   ↓
-6. Query sent to Foundry Local (qwen2.5-0.5b)
-   ↓
-7. Response streamed back through WebSocket
-   ↓
-8. Web UI displays response in real-time
+┌──────────────────────────────────────────────────────────┐
+│                    YOUR SETUP                             │
+│                                                           │
+│  ┌─────────────┐         ┌──────────────┐               │
+│  │  dashboard  │────────▶│  FastAPI     │               │
+│  │  .html      │         │  Server      │               │
+│  └─────────────┘         │  :8000       │               │
+│        │                 └───────┬──────┘               │
+│        │                         │                       │
+│        ▼                         ▼                       │
+│  ┌─────────────┐         ┌──────────────┐               │
+│  │   Browser   │         │  REST API    │               │
+│  │   Testing   │         │  11 Endpoints│               │
+│  └─────────────┘         └───────┬──────┘               │
+│                                   │                       │
+│        ┌──────────────────────────┼──────────────┐       │
+│        │                          │              │       │
+│        ▼                          ▼              ▼       │
+│  ┌──────────┐             ┌────────────┐  ┌─────────┐  │
+│  │ K8s      │◀────────────│  Context   │  │ Foundry │  │
+│  │ Client   │             │  Buffer    │  │ Client  │  │
+│  │ (Active) │             │  (Active)  │  │ (Ready) │  │
+│  └────┬─────┘             └────────────┘  └─────────┘  │
+│       │                         ▲              │         │
+│       │                         │              │         │
+│       ▼                         │              ▼         │
+│  ┌──────────┐           ┌──────┴──────┐   ┌─────────┐  │
+│  │  k3s     │           │ Background  │   │ Foundry │  │
+│  │ Cluster  │           │  Watcher    │   │  Local  │  │
+│  │ 9 pods   │           │  (Every 30s)│   │ (TODO)  │  │
+│  └──────────┘           └─────────────┘   └─────────┘  │
+│     ✅                        ✅                ⏳       │
+└──────────────────────────────────────────────────────────┘
 ```
 
-### Data Collection Flow
+## Component Status
 
+| Component | Status | What It Does |
+|-----------|--------|--------------|
+| **FastAPI Server** | ✅ Running | Serves REST API on port 8000 |
+| **Kubernetes Client** | ✅ Connected | Talks to k3s, gets pods/events |
+| **Context Buffer** | ✅ Active | Stores 24h of cluster history |
+| **Background Watcher** | ✅ Polling | Updates every 30 seconds |
+| **REST API** | ✅ Working | 11 endpoints for cluster data |
+| **Dashboard UI** | ✅ Ready | HTML file with live updates |
+| **Foundry Client** | ✅ Ready | Waiting for Foundry endpoint |
+| **Foundry Local** | ⏳ TODO | You need to install this |
+
+## Data Flow Examples
+
+### Example 1: Get Pod List
 ```
-1. Kubernetes Watcher establishes watches
-   ↓
-2. Cluster events/logs stream to watcher
-   ↓
-3. Data normalized and timestamped
-   ↓
-4. Context Service stores in circular buffer
-   ↓
-5. Old data (>2 hours) automatically evicted
-   ↓
-6. Data indexed for fast retrieval
-```
-
-## Deployment Architecture
-
-### Local Development (k3s)
-
-```
-┌─────────────────────────────────────────┐
-│       Windows 11 Laptop                 │
-│  ┌─────────────────────────────────┐   │
-│  │  WSL2 / Docker Desktop          │   │
-│  │  ┌───────────────────────────┐  │   │
-│  │  │  k3s Cluster              │  │   │
-│  │  │  - Single node            │  │   │
-│  │  │  - Local development      │  │   │
-│  │  └───────────────────────────┘  │   │
-│  └─────────────────────────────────┘   │
-│                                         │
-│  Azure AI Foundry Local                 │
-│  http://127.0.0.1:58366                 │
-│                                         │
-│  AI Ops Assistant Backend               │
-│  http://localhost:8000                  │
-│                                         │
-│  Frontend Dev Server                    │
-│  http://localhost:3000                  │
-└─────────────────────────────────────────┘
+User → Browser → GET /api/cluster/pods 
+                    ↓
+              Kubernetes Client → k3s cluster
+                    ↓
+              Returns 9 pods → User sees list
 ```
 
-### Production (AKS Arc)
-
+### Example 2: Background Monitoring
 ```
-┌──────────────────────────────────────────────┐
-│         AKS Arc Cluster                      │
-│  ┌────────────────────────────────────────┐ │
-│  │  Namespace: aiops-assistant            │ │
-│  │  ┌──────────────┐  ┌─────────────┐    │ │
-│  │  │  Backend Pod │  │ Frontend    │    │ │
-│  │  │  (FastAPI)   │  │ (Static)    │    │ │
-│  │  └──────────────┘  └─────────────┘    │ │
-│  │                                        │ │
-│  │  ServiceAccount with RBAC             │ │
-│  │  (read pods, events, logs)            │ │
-│  └────────────────────────────────────────┘ │
-└──────────────────────────────────────────────┘
-         │
-         │ Queries Foundry Local endpoint
-         │ (must be accessible from cluster)
-         ▼
-┌──────────────────────────────────────────────┐
-│  Azure AI Foundry Local                      │
-│  (Deployed on-premises or edge)              │
-└──────────────────────────────────────────────┘
+Every 30s: Background Watcher → Kubernetes Client → Get cluster status
+                                      ↓
+                                Context Buffer (stores snapshot)
+                                      ↓
+                                Available for queries
 ```
 
-## Security Considerations
+### Example 3: Chat Query (Once Foundry is set up)
+```
+User → "Why is my pod failing?" → POST /api/chat/query
+                                      ↓
+                                Context Buffer → Get last 1 hour
+                                      ↓
+                                Build prompt with context
+                                      ↓
+                                Foundry Local → AI analyzes
+                                      ↓
+                                Returns answer → User
+```
 
-### Development Environment
+## File Locations
 
-- **No authentication**: Simplified for local development
-- **RBAC**: ServiceAccount with minimal required permissions
-- **Network**: Backend only accessible within cluster
-- **Secrets**: Foundry endpoint configured via environment variables
+```
+c:\AI\aksarc-foundrylocal-aiops\
+│
+├── start.ps1              ← Start the server (TESTED ✅)
+├── dashboard.html         ← Web UI (READY ✅)
+├── START.md              ← Instructions (YOU ARE HERE)
+├── FOUNDRY_SETUP.md      ← Foundry instructions (NEXT STEP)
+│
+├── backend\
+│   ├── .env              ← Configuration (UPDATE for Foundry)
+│   ├── run.py            ← Entry point
+│   │
+│   └── src\
+│       ├── main.py       ← FastAPI app
+│       ├── api\
+│       │   └── routes.py ← REST endpoints
+│       └── services\
+│           ├── kubernetes.py  ← K8s client ✅
+│           ├── context.py     ← Context buffer ✅
+│           └── foundry.py     ← Foundry client ⏳
+```
 
-### Future Enhancements (Post-MVP)
+## What Works Right Now
 
-- Implement user authentication (Azure AD integration)
-- Add TLS/HTTPS for all communications
-- Implement query rate limiting
-- Add audit logging for all queries
-- Secure WebSocket connections
-- Implement namespace-scoped permissions
+### ✅ Available Endpoints (Test at http://localhost:8000/docs)
 
-## Performance Considerations
+1. **GET /api/health** - Check service status
+2. **GET /api/cluster/status** - Full cluster state with pods
+3. **GET /api/cluster/pods** - List pods (filterable)
+4. **GET /api/cluster/events** - Recent cluster events
+5. **GET /api/cluster/pods/{ns}/{pod}/logs** - Pod logs
+6. **GET /api/context/recent** - Recent cluster snapshots
+7. **GET /api/context/range** - Snapshots in time range
+8. **GET /api/context/pod-history/{ns}/{pod}** - Pod history
+9. **GET /api/context/events** - Events by type
+10. **GET /api/context/stats** - Context buffer statistics
 
-### Memory Management
+### ⏳ Waiting for Foundry
 
-- **In-memory buffer**: Limited to 2 hours of data
-- **Circular buffer**: Automatic eviction of old data
-- **Indexing**: Fast lookups by timestamp, namespace, resource type
-- **Estimated memory**: ~500MB for typical cluster (100 pods)
+11. **POST /api/chat/query** - Natural language queries
+    - Code is ready ✅
+    - Needs Foundry Local endpoint ⏳
 
-### Query Performance
+## Quick Commands
 
-- **Context retrieval**: <100ms for typical queries
-- **Foundry inference**: ~1-3 seconds (depends on query complexity)
-- **Streaming**: Real-time response streaming via WebSocket
-- **Concurrent queries**: Supports multiple simultaneous users
+### Start Server
+```powershell
+.\start.ps1
+```
 
-### Scaling Considerations
+### Test Health
+```powershell
+Invoke-RestMethod http://localhost:8000/api/health
+```
 
-- **Single replica**: Initial implementation runs single backend pod
-- **Stateless design**: Easy to scale horizontally in future
-- **Shared context**: Future enhancement with Redis/shared cache
-- **Load testing**: Target 10 concurrent users for MVP
+### Get All Pods
+```powershell
+Invoke-RestMethod http://localhost:8000/api/cluster/pods | ConvertTo-Json -Depth 3
+```
 
-## Technology Choices - Rationale
+### View Dashboard
+```
+Double-click dashboard.html
+```
 
-### Why FastAPI?
-- Async/await support for concurrent operations
-- Automatic API documentation (OpenAPI/Swagger)
-- Built-in WebSocket support
-- Excellent performance for Python framework
-- Type hints and Pydantic integration
+### Set Up Foundry (Next Step)
+```
+Read FOUNDRY_SETUP.md
+```
 
-### Why React + TypeScript?
-- Strong typing prevents runtime errors
-- Component-based architecture for maintainability
-- Large ecosystem and community support
-- Excellent developer experience with Vite
+## Timeline
 
-### Why In-Memory Buffer (vs. Database)?
-- Simpler implementation for MVP
-- Lower latency for recent data access
-- No database setup/maintenance required
-- Adequate for 2-hour rolling window
-- Easy to replace with persistent storage later
+✅ **DONE** - Kubernetes integration working  
+✅ **DONE** - Context buffer tracking cluster state  
+✅ **DONE** - REST API serving data  
+✅ **DONE** - Background watcher monitoring  
+✅ **DONE** - Dashboard UI ready  
+⏳ **TODO** - Install Foundry Local (your action)  
+⏳ **TODO** - Configure Foundry endpoint in .env  
+⏳ **TODO** - Test natural language queries  
 
-### Why Foundry Local (vs. Cloud AI)?
-- Zero cloud dependency for inference
-- Lower latency (local processing)
-- Cost-effective (no API charges)
-- Data privacy (stays on-premises)
-- Suitable for edge/disconnected scenarios
+## Need Help?
 
-## Future Architecture Enhancements
-
-### Planned Features
-
-1. **Persistent Storage**
-   - Add PostgreSQL/TimescaleDB for historical data
-   - Enable trend analysis and predictions
-
-2. **Multi-Cluster Support**
-   - Aggregate data from multiple clusters
-   - Centralized AI assistant
-
-3. **Advanced Features**
-   - Anomaly detection
-   - Predictive alerts
-   - Automated remediation suggestions
-
-4. **Scalability**
-   - Redis for shared context cache
-   - Horizontal pod autoscaling
-   - Load balancing for high availability
+- **Server issues**: See `START.md` troubleshooting section
+- **Foundry setup**: See `FOUNDRY_SETUP.md` complete guide
+- **API testing**: Go to http://localhost:8000/docs
+- **Security**: See `SECURITY_AUDIT.md` for best practices

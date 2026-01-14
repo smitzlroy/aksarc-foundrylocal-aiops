@@ -81,9 +81,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
 
     try:
-        # Auto-detect AI endpoint (Foundry Local, Ollama, etc.)
+        # Auto-detect AI endpoint (Foundry Local, Ollama, etc.) with timeout
         logger.info("detecting_ai_endpoint")
-        ai_config = await detect_ai_endpoint()
+        try:
+            ai_config = await asyncio.wait_for(detect_ai_endpoint(), timeout=10.0)
+        except asyncio.TimeoutError:
+            logger.warning("ai_endpoint_detection_timeout")
+            ai_config = None
         
         if ai_config:
             logger.info(

@@ -235,30 +235,6 @@ kubectl cluster-info
 
 ---
 
-## 🤝 Contributing
-
-We welcome contributions! Here's how you can help:
-
-1. **🐛 Report Bugs**: Open an issue with details
-2. **💡 Suggest Features**: Share your ideas in discussions
-3. **📝 Improve Docs**: Help make documentation clearer
-4. **🔧 Submit PRs**: Fix bugs or add features
-
-### Development Setup
-
-```powershell
-# Clone and install
-git clone https://github.com/yourusername/k8s-ai-assistant.git
-cd k8s-ai-assistant
-cd backend
-pip install -r requirements.txt
-
-# Start development server
-python -m src.main
-```
-
----
-
 ## 🔐 Security
 
 - **No Cloud Dependencies**: All processing happens locally
@@ -270,46 +246,9 @@ python -m src.main
 
 ---
 
-## 📋 Roadmap
-
-### ✅ Completed
-- [x] Natural language chat interface
-- [x] Network topology visualization with IP addresses
-- [x] Cluster diagnostics with progress tracking
-- [x] Multi-platform support (k8s/k3s/AKS Arc)
-- [x] Export topology data to JSON
-- [x] Quick Actions bar for common tasks
-- [x] Fallback diagnostics for all K8s clusters
-
-### 🔮 Planned
-- [ ] Historical metrics storage
-- [ ] Multi-cluster support
-- [ ] Custom diagnostic plugins
-- [ ] GitOps integration
-- [ ] Helm chart deployment
-- [ ] CLI interface
-
----
-
 ## 📜 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **Azure AI Foundry Team**: For the local AI runtime
-- **Kubernetes Community**: For excellent APIs and tools
-- **FastAPI**: For the amazing Python web framework
-- **Contributors**: Everyone who helps improve this project
-
----
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/k8s-ai-assistant/issues)
-- **Documentation**: Check the `docs/` folder for detailed guides
 
 ---
 
