@@ -29,7 +29,7 @@ Write-Host "━━━━━━━━━━━━━━━━━━━━━━�
 Write-Host ""
 
 # Set PATH to find Python
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
 
 # Verify Python is available
 $pythonPath = (Get-Command python -ErrorAction SilentlyContinue).Path
@@ -40,4 +40,4 @@ if (-not $pythonPath) {
 }
 
 Set-Location "$PSScriptRoot\backend"
-& $pythonPath run.py 2>$null
+& $pythonPath run.py

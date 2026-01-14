@@ -54,12 +54,15 @@ async def cluster_watcher() -> None:
                 
             except asyncio.CancelledError:
                 logger.info("cluster_watcher_cancelled")
-                break
+                raise  # Re-raise to properly handle cancellation
             except Exception as e:
-                logger.error("cluster_watcher_error", error=str(e))
+                logger.error("cluster_watcher_error", error=str(e), exc_info=True)
                 # Wait before retrying
                 await asyncio.sleep(5)
                 
+    except asyncio.CancelledError:
+        logger.info("cluster_watcher_cancelled_outer")
+        pass
     finally:
         logger.info("cluster_watcher_stopped")
 
@@ -81,13 +84,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
 
     try:
-        # Auto-detect AI endpoint (Foundry Local, Ollama, etc.) with timeout
+        # Auto-detect AI endpoint (Foundry Local, Ollama, etc.)
         logger.info("detecting_ai_endpoint")
-        try:
-            ai_config = await asyncio.wait_for(detect_ai_endpoint(), timeout=10.0)
-        except asyncio.TimeoutError:
-            logger.warning("ai_endpoint_detection_timeout")
-            ai_config = None
+        ai_config = await detect_ai_endpoint()
         
         if ai_config:
             logger.info(
