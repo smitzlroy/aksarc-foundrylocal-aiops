@@ -21,7 +21,7 @@ K8s AI Assistant is a **natural language interface** for Kubernetes that lets yo
 ### Why Choose K8s AI Assistant?
 
 - **💬 Natural Language**: No more memorizing kubectl commands - just ask naturally
-- **🔒 Privacy First**: All AI processing happens locally via Azure AI Foundry Local
+- **🔒 Privacy First**: All AI processing happens locally via **Azure AI Foundry Local** - no cloud, no data leaving your infrastructure
 - **🎯 Multi-Platform**: Works with k8s, k3s, and Azure Kubernetes Service (AKS Arc)
 - **🗺️ Network Topology**: Visualize pod communication, services, and network policies with IP addresses
 - **🔍 Smart Diagnostics**: Automated cluster health checks with actionable recommendations
@@ -73,7 +73,7 @@ Assistant: Here are 2 pods with issues:
   - ✅ k3s (lightweight Kubernetes)
   - ✅ k3d (k3s in Docker - perfect for local testing)
   - ✅ EKS, GKE, Minikube, or any standard k8s 1.27+
-- **Ollama** (optional, for AI chat) ([Install Guide](https://ollama.ai/))
+- **Azure AI Foundry Local** or **Ollama** (optional, for AI-powered chat) ([Foundry Local Guide](https://azure.microsoft.com/products/ai-foundry))
 
 ### Installation
 
@@ -225,7 +225,7 @@ k3d cluster create aiops-dev --agents 2
 |-------|-----------|---------|
 | **Frontend** | HTML/CSS/JavaScript | Single-page application |
 | **Backend** | Python 3.11+ FastAPI | REST API server |
-| **AI (Optional)** | Azure AI Foundry Local | Natural language processing |
+| **AI (Optional)** | **Azure AI Foundry Local** / Ollama | Local AI inference - privacy-first natural language processing |
 | **Kubernetes** | kubectl / Python Client | Cluster interaction |
 | **Platform** | k8s / k3s / AKS Arc | Target clusters |
 
@@ -261,8 +261,8 @@ Create `backend/.env` (optional - defaults work for most cases):
 API_PORT=8080                                    # Web UI and API port
 LOG_LEVEL=INFO                                   # DEBUG, INFO, WARN, ERROR
 
-# AI Configuration (Optional - auto-detected if Ollama/Foundry running)
-FOUNDRY_ENDPOINT=http://localhost:11434          # Ollama/Foundry endpoint
+# AI Configuration (Optional - auto-detected if Foundry Local running)
+FOUNDRY_ENDPOINT=http://localhost:11434          # Azure AI Foundry Local endpoint (or Ollama)
 FOUNDRY_MODEL=llama2                             # Default AI model (can be changed in UI)
 FOUNDRY_TIMEOUT=30.0                             # Request timeout
 
@@ -272,26 +272,30 @@ KUBECONFIG=~/.kube/config                        # Path to kubeconfig file
 
 ### Setting Up AI Features (Optional)
 
-1. **Install Ollama or Azure AI Foundry Local**:
+**Recommended: Azure AI Foundry Local** for enterprise-grade local AI inference.
+
+1. **Install Azure AI Foundry Local** (Recommended) **or Ollama**:
    ```bash
-   # macOS/Linux
-   curl -fsSL https://ollama.ai/install.sh | sh
+   # Azure AI Foundry Local
+   # Download from: https://azure.microsoft.com/products/ai-foundry
    
+   # Alternative: Ollama (simpler setup)
+   # macOS/Linux: curl -fsSL https://ollama.ai/install.sh | sh
    # Windows: Download from https://ollama.ai/
    ```
 
-2. **Start Ollama** (runs on port 11434 by default):
+2. **Start Foundry Local or Ollama** (runs on port 11434 by default):
    ```bash
    ollama serve
    ```
 
-3. **Select and Download Models** - Use the UI dropdown in the Foundry Control panel:
-   - The UI will detect available models
+3. **Select and Download Models** - Use the UI dropdown in the **Foundry Local Control** panel:
+   - The UI automatically detects Foundry Local and available models
    - Select a model from the dropdown (e.g., llama2, phi-3, qwen)
    - Click to download and start the model
-   - No manual `ollama pull` commands needed!
+   - No manual commands needed - all managed through the UI!
 
-**Without Ollama:** All features work except natural language chat. You can still use topology, diagnostics, and monitoring.
+**Without Foundry Local/Ollama:** All features work except AI-powered natural language chat. You can still use topology, diagnostics, and monitoring - the core Kubernetes management features remain fully functional.
 
 ### Deployment Options
 
