@@ -1041,12 +1041,15 @@
                 <div id="foundryHelp" style="font-size: 11px; color: var(--text-secondary); margin: 8px 0; display: none;">
                     💡 Select a model, then click Start. ✅ = Ready instantly | 📦 = Will download first
                 </div>
-                <select class="model-select" id="modelSelect" title="Select AI model to run" aria-label="Model selection">
+                <select class="model-select" id="modelSelect" title="Select AI model to run" aria-label="Model selection" onchange="console.log('Model selected:', this.value)">
                     <option value="">Loading models...</option>
                 </select>
-                <button class="control-button start" id="startBtn" onclick="startFoundry()">▶️ Start</button>
-                <button class="control-button stop" id="stopBtn" onclick="stopFoundry()" style="display:none;">⏹️ Stop</button>
-                <button class="control-button restart" id="restartBtn" onclick="restartFoundry()" style="display:none;">🔄 Restart</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="control-button start" id="startBtn" onclick="startFoundry()">▶️ Start</button>
+                    <button class="control-button stop" id="stopBtn" onclick="stopFoundry()" style="display:none;">⏹️ Stop</button>
+                    <button class="control-button restart" id="restartBtn" onclick="restartFoundry()" style="display:none;">🔄 Restart</button>
+                    <button class="control-button" onclick="checkFoundryStatus()" style="font-size: 10px; padding: 4px 8px;" title="Refresh model list">🔄</button>
+                </div>
             </div>
         </div>
         
@@ -1266,11 +1269,15 @@
 
         // Check Foundry status
         async function checkFoundryStatus() {
+            console.log('🔍 Checking Foundry status...');
             try {
                 const response = await fetch(`${API_BASE}/foundry/status`);
                 const data = await response.json();
                 
-                console.log('Foundry status response:', data);
+                console.log('📊 Foundry status response:', data);
+                console.log('   - Installed:', data.installed);
+                console.log('   - Running:', data.running);
+                console.log('   - Available models count:', data.available_models?.length);
                 
                 const statusDiv = document.getElementById('foundryStatusText');
                 const modelSelect = document.getElementById('modelSelect');
@@ -1278,6 +1285,11 @@
                 const stopBtn = document.getElementById('stopBtn');
                 const restartBtn = document.getElementById('restartBtn');
                 const statusBadge = document.getElementById('statusBadge');
+                
+                if (!statusDiv || !modelSelect || !startBtn) {
+                    console.error('❌ Required DOM elements not found!');
+                    return;
+                }
                 
                 if (!data.installed) {
                     statusDiv.textContent = '❌ Foundry not installed';
@@ -1395,7 +1407,16 @@
                     }
                 }
             } catch (error) {
-                console.error('Error checking Foundry status:', error);
+                console.error('❌ Error checking Foundry status:', error);
+                const statusDiv = document.getElementById('foundryStatusText');
+                const modelSelect = document.getElementById('modelSelect');
+                if (statusDiv) {
+                    statusDiv.textContent = '⚠️ Error checking status';
+                    statusDiv.className = 'foundry-status stopped';
+                }
+                if (modelSelect) {
+                    modelSelect.innerHTML = '<option value="">Error loading models</option>';
+                }
             }
         }
 
