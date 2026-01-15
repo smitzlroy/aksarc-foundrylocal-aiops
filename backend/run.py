@@ -13,13 +13,12 @@ if __name__ == "__main__":
     from src.core.config import settings
 
     try:
-        # Use reload=True to enable proper signal handling and keep server alive
+        # Use string import to avoid port binding race condition
         uvicorn.run(
             "src.main:app",
             host=settings.api_host,
             port=settings.api_port,
             log_level=settings.log_level.lower(),
-            reload=True,  # This ensures proper process supervision
         )
     except KeyboardInterrupt:
         print("\n👋 Server stopped by user")

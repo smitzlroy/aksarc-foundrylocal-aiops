@@ -10,12 +10,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from src.api.routes import initialize_services, router
+from src.api.v1.topology import router as topology_router, set_topology_builder
+from src.api.v1.diagnostics import router as diagnostics_router, set_diagnostic_services
+from src.api.v1.reasoning import router as reasoning_router, set_reasoning_loop
 from src.core.config import settings
 from src.core.logging import configure_logging, get_logger
 from src.services.context import ContextBuffer
 from src.services.foundry import FoundryClient
 from src.services.kubernetes import KubernetesClient
 from src.services.ai_detector import detect_ai_endpoint
+from src.reasoning.topology_analyzer import TopologyGraphBuilder
+from src.diagnostics.runner import DiagnosticRunner
+from src.reasoning.loop import ReasoningLoop
+from src.exporters.support_bundle import SupportBundleGenerator
 
 # Configure logging
 configure_logging(
@@ -30,6 +37,10 @@ k8s_client: KubernetesClient | None = None
 context_buffer: ContextBuffer | None = None
 foundry_client: FoundryClient | None = None
 watcher_task: asyncio.Task | None = None
+topology_builder: TopologyGraphBuilder | None = None
+diagnostic_runner: DiagnosticRunner | None = None
+reasoning_loop: ReasoningLoop | None = None
+support_bundle_generator: SupportBundleGenerator | None = None
 
 
 async def cluster_watcher() -> None:
@@ -74,6 +85,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Handles startup and shutdown events for the application.
     """
     global k8s_client, context_buffer, foundry_client, watcher_task
+    global topology_builder, diagnostic_runner, reasoning_loop, support_bundle_generator
     
     # Startup
     logger.info(
@@ -103,10 +115,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             foundry_endpoint = settings.foundry_endpoint
             foundry_model = settings.foundry_model
         
-        # Initialize Kubernetes client
+        # Initialize Kubernetes client (optional - continue if unavailable)
         k8s_client = KubernetesClient()
-        await k8s_client.connect()
-        logger.info("kubernetes_client_initialized")
+        try:
+            await k8s_client.connect()
+            logger.info("kubernetes_client_initialized")
+        except Exception as e:
+            logger.warning(
+                "kubernetes_unavailable_continuing_without_cluster",
+                error=str(e)
+            )
+            k8s_client = None  # Continue without k8s
         
         # Initialize context buffer
         context_buffer = ContextBuffer(
@@ -125,19 +144,53 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         # Initialize API routes with services
         initialize_services(k8s_client, context_buffer, foundry_client)
         
-        # Start background cluster watcher
-        watcher_task = asyncio.create_task(cluster_watcher())
-        logger.info("cluster_watcher_task_created")
+        # Initialize new graph-based services (only if k8s available)
+        if k8s_client:
+            topology_builder = TopologyGraphBuilder(k8s_client)
+            diagnostic_runner = DiagnosticRunner(k8s_client)
+            support_bundle_generator = SupportBundleGenerator(
+                k8s_client,
+                topology_builder,
+                diagnostic_runner
+            )
+            logger.info("graph_services_initialized")
+            
+            # Initialize reasoning loop (but don't start it automatically)
+            reasoning_loop = ReasoningLoop(
+                topology_builder=topology_builder,
+                diagnostic_runner=diagnostic_runner,
+                action_generator=None,  # Placeholder for future action generator
+                interval_seconds=60
+            )
+            logger.info("reasoning_loop_initialized")
+            
+            # Inject dependencies into API routers
+            set_topology_builder(topology_builder)
+            set_diagnostic_services(diagnostic_runner, support_bundle_generator, topology_builder)
+            set_reasoning_loop(reasoning_loop)
+            logger.info("api_dependencies_injected")
+            
+            # Start background cluster watcher
+            watcher_task = asyncio.create_task(cluster_watcher())
+            logger.info("cluster_watcher_task_created")
+        else:
+            logger.warning("kubernetes_services_disabled_cluster_unavailable")
         
     except Exception as e:
-        logger.error("initialization_error", error=str(e))
+        logger.error("initialization_error", error=str(e), exc_info=True)
         raise
 
+    logger.info("lifespan_yielding_control")
     yield
+    logger.info("lifespan_after_yield_shutting_down")
 
     # Shutdown
     logger.info("application_shutting_down")
 
+    # Stop reasoning loop
+    if reasoning_loop:
+        await reasoning_loop.stop()
+    
     # Cancel watcher task
     if watcher_task:
         watcher_task.cancel()
@@ -175,6 +228,9 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(router)
+app.include_router(topology_router)
+app.include_router(diagnostics_router)
+app.include_router(reasoning_router)
 
 
 @app.get("/")

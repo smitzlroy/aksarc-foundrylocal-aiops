@@ -21,23 +21,23 @@ Write-Host "✅ Kubernetes connected" -ForegroundColor Green
 Write-Host ""
 Write-Host "🚀 Starting server..." -ForegroundColor Cyan
 Write-Host "   URL: " -NoNewline -ForegroundColor DarkGray
-Write-Host "http://localhost:8000" -ForegroundColor Cyan
+Write-Host "http://localhost:8080" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Green
 Write-Host "   Press Ctrl+C to stop" -ForegroundColor DarkGray
 Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Green
 Write-Host ""
 
-# Set PATH to find Python
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+# Change to backend directory and run
+Set-Location "$PSScriptRoot\backend"
 
 # Verify Python is available
-$pythonPath = (Get-Command python -ErrorAction SilentlyContinue).Path
-if (-not $pythonPath) {
+$pythonCmd = Get-Command python -ErrorAction SilentlyContinue
+if (-not $pythonCmd) {
     Write-Host "❌ Python not found" -ForegroundColor Red
     Write-Host "   Please install Python 3.11+ from python.org" -ForegroundColor DarkGray
     exit 1
 }
 
-Set-Location "$PSScriptRoot\backend"
-& $pythonPath run.py
+# Run the server
+python run.py

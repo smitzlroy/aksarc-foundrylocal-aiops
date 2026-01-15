@@ -66,57 +66,121 @@ Assistant: Here are 2 pods with issues:
 
 ### Prerequisites
 
-- **Kubernetes Cluster**: k3s, k8s, or AKS Arc
-- **kubectl**: Configured to access your cluster
-- **Python 3.11+**: For the backend
-- **Azure AI Foundry Local** *(optional)*: For AI-powered chat features
+- **Python 3.11+** installed ([Download](https://www.python.org/downloads/))
+- **kubectl** configured with cluster access ([Install Guide](https://kubernetes.io/docs/tasks/tools/))
+- **Kubernetes cluster** - Any of these work:
+  - ✅ AKS (Azure Kubernetes Service) or AKS Arc
+  - ✅ k3s (lightweight Kubernetes)
+  - ✅ k3d (k3s in Docker - perfect for local testing)
+  - ✅ EKS, GKE, Minikube, or any standard k8s 1.27+
+- **Ollama** (optional, for AI chat) ([Install Guide](https://ollama.ai/))
 
 ### Installation
 
-#### Windows:
-
-```powershell
-# Clone the repository
-git clone https://github.com/yourusername/k8s-ai-assistant.git
-cd k8s-ai-assistant
-
-# Run the start script
-.\run.ps1
-```
-
-#### Linux/Mac:
-
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/k8s-ai-assistant.git
-cd k8s-ai-assistant
+git clone https://github.com/smitzlroy/aksarc-foundrylocal-aiops.git
+cd aksarc-foundrylocal-aiops
 
-# Make script executable and run
-chmod +x run.py
-python3 run.py
+# Install Python dependencies
+cd backend
+pip install -r requirements.txt
+cd ..
 ```
 
-The application will:
-1. ✅ Check Python dependencies
+### Running the Server
+
+**Option 1: Background Service (Recommended)**
+```powershell
+# Start server in background
+.\start-service.ps1
+
+# Check status
+.\status-service.ps1
+
+# Stop server
+.\stop-service.ps1
+```
+
+**Option 2: Foreground (for debugging)**
+```powershell
+cd backend
+python run.py
+```
+
+**Option 3: Quick Setup Script**
+```powershell
+.\run.ps1  # Installs dependencies + starts server
+```
+
+### Access the Application
+
+Open your browser to:
+- **Web UI**: http://localhost:8080/
+- **API Docs**: http://localhost:8080/docs
+- **Health Check**: http://localhost:8080/api/health
+
+The server will:
+1. ✅ Auto-detect your cluster type (k3s, AKS Arc, vanilla k8s)
+2. ✅ Connect using your existing kubectl credentials
+3. ✅ Start serving the web interface
+4. ✅ Run in background (with start-service.ps1)
 2. ✅ Install required packages
 3. ✅ Start the backend server
 4. ✅ Open your browser to http://localhost:8000
 
 ### First Steps
 
-1. **Check Cluster Connection**: The UI will show cluster stats (pods, nodes, namespaces) if connected
-2. **Try Quick Actions**:
-   - 🔍 **Diagnostics & Logs**: Run cluster health checks
-   - 🗺️ **Network Topology**: Visualize your cluster network with IP addresses
-   - 📋 **Recent Logs**: View recent pod logs
-   - 🏥 **Health Check**: Get cluster status overview
+1. **Verify Connection**: The UI will show cluster stats (pods, nodes, namespaces) if connected
+   - If showing "Offline", wait 15-20 seconds for initialization
+   - Hard refresh browser (Ctrl+F5) if needed
 
-3. **Ask Questions** (requires AI Foundry):
+2. **Try Quick Actions**:
+   - 🔍 **Diagnostics & Logs**: Run automated health checks
+   - 🗺️ **Network Topology**: Visualize service dependencies with IP addresses
+   - 📋 **Recent Logs**: View recent pod activity
+   - 🏥 **Health Check**: Get overall cluster status
+
+3. **Use Natural Language Chat** (requires Ollama):
    ```
    "Show me all pods in the default namespace"
    "Which pods are using the most memory?"
    "Get logs from nginx pod"
+   "Check for any failing pods"
    ```
+
+### Connecting to Your Cluster
+
+**The tool uses your existing kubectl configuration** - no additional setup!
+
+1. **Verify kubectl access**:
+   ```bash
+   kubectl cluster-info
+   kubectl get nodes
+   ```
+
+2. **That's it!** The tool will automatically:
+   - Read your `~/.kube/config`
+   - Detect cluster type (AKS Arc / k3s / vanilla k8s)
+   - Connect using your credentials
+   - Start monitoring
+
+**Supported Environments:**
+- AKS (Azure Kubernetes Service) including AKS on Arc
+- k3s (lightweight Kubernetes for edge/IoT)
+- k3d (k3s in Docker for local development)
+- Any standard Kubernetes 1.27+ cluster
+
+**Local Testing with k3d:**
+```bash
+# Create a test cluster
+k3d cluster create aiops-dev --agents 2
+
+# Start the tool
+.\start-service.ps1
+
+# Access at http://localhost:8080/
+```
 
 ---
 
@@ -191,28 +255,58 @@ The application will:
 
 ### Backend Configuration
 
-Create `backend/.env` (optional for AI features):
+Create `backend/.env` (optional - defaults work for most cases):
 
 ```env
-# Azure AI Foundry Local (optional)
-FOUNDRY_ENDPOINT=http://localhost:8080
-FOUNDRY_MODEL=phi-3-mini-4k-instruct
+# API Server Configuration
+API_PORT=8080                                    # Web UI and API port
+LOG_LEVEL=INFO                                   # DEBUG, INFO, WARN, ERROR
 
-# Logging
-LOG_LEVEL=INFO
+# AI Configuration (Optional)
+FOUNDRY_ENDPOINT=http://localhost:11434          # Ollama endpoint
+FOUNDRY_MODEL=llama2                             # Default AI model
+FOUNDRY_TIMEOUT=30.0                             # Request timeout
 
-# Server
-HOST=0.0.0.0
-PORT=8000
+# Kubernetes Configuration (Auto-detected)
+KUBECONFIG=~/.kube/config                        # Path to kubeconfig file
 ```
 
-### Kubernetes Configuration
+### Setting Up AI Features (Optional)
 
-The assistant uses your existing `~/.kube/config`. Ensure kubectl is configured:
+1. **Install Ollama**:
+   ```bash
+   # macOS/Linux
+   curl -fsSL https://ollama.ai/install.sh | sh
+   
+   # Windows: Download from https://ollama.ai/
+   ```
 
-```bash
-kubectl cluster-info
+2. **Pull a model**:
+   ```bash
+   ollama pull llama2
+   # or for faster responses:
+   ollama pull tinyllama
+   ```
+
+3. **Start the tool** - it will auto-detect Ollama!
+
+**Without Ollama:** All features work except natural language chat. You can still use topology, diagnostics, and monitoring.
+
+### Deployment Options
+
+**Local Development:**
+```powershell
+.\start-service.ps1  # Runs on localhost:8080
 ```
+
+**Production (with authentication/TLS):**
+1. Deploy behind reverse proxy (nginx/Traefik)
+2. Add authentication layer (OAuth2/OIDC)
+3. Use HTTPS with proper certificates
+4. Configure RBAC permissions appropriately
+5. Run as system service (systemd/Windows Service)
+
+See `README-SERVICE.md` for background service setup and auto-start on boot
 
 ---
 

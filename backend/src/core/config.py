@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # API Configuration
     api_host: str = Field(default="0.0.0.0", description="API server host")
-    api_port: int = Field(default=8000, description="API server port")
+    api_port: int = Field(default=8080, description="API server port")
     cors_origins: list[str] = Field(
         default=["http://localhost:3000"],
         description="Allowed CORS origins",
@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     # Foundry Local Configuration
     foundry_endpoint: str = Field(
-        default="http://localhost:8000",
+        default="http://localhost:11434",  # Ollama default port
         description="Foundry Local endpoint URL",
     )
     foundry_model: str = Field(
