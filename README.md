@@ -42,7 +42,7 @@ Assistant: Here are 2 pods with issues:
 
 ### 🗺️ Network Topology Visualization
 - **Communication Matrix**: See which pods talk to which services
-- **IP Addresses**: View pod IPs (📍 10.42.0.5), service cluster IPs (🌐 10.43.0.1), and external IPs (🌍 52.186.14.10)
+- **IP Addresses**: View pod IPs, service cluster IPs, and external IPs with visual indicators
 - **Dependencies**: Understand service-to-pod relationships with port mappings
 - **Network Policies**: Identify security rules and unrestricted namespaces
 - **Export**: Download topology data as JSON for documentation and analysis
@@ -123,11 +123,8 @@ Open your browser to:
 The server will:
 1. ✅ Auto-detect your cluster type (k3s, AKS Arc, vanilla k8s)
 2. ✅ Connect using your existing kubectl credentials
-3. ✅ Start serving the web interface
+3. ✅ Start serving the web interface on port 8080
 4. ✅ Run in background (with start-service.ps1)
-2. ✅ Install required packages
-3. ✅ Start the backend server
-4. ✅ Open your browser to http://localhost:8000
 
 ### First Steps
 
@@ -137,7 +134,7 @@ The server will:
 
 2. **Try Quick Actions**:
    - 🔍 **Diagnostics & Logs**: Run automated health checks
-   - 🗺️ **Network Topology**: Visualize service dependencies with IP addresses
+   - 🗺️ **Network Topology**: Visualize service dependencies and pod communication
    - 📋 **Recent Logs**: View recent pod activity
    - 🏥 **Health Check**: Get overall cluster status
 
@@ -238,6 +235,8 @@ k3d cluster create aiops-dev --agents 2
 
 ### User Guides
 - [Quick Start Guide](QUICKSTART.md) - Get up and running
+- [Background Service Setup](README-SERVICE.md) - Run as Windows background service
+- [Linux Server Deployment](deploy/systemd/README.md) - Deploy on jumpbox/dev server with systemd
 - [Troubleshooting](FOUNDRY_TROUBLESHOOTING.md) - Common issues and solutions
 
 ### Developer Guides
@@ -245,9 +244,9 @@ k3d cluster create aiops-dev --agents 2
 - [Development Setup](docs/DEVELOPMENT.md) - Setting up dev environment
 
 ### Feature Documentation
-- [Network Topology](VISUAL_IMPROVEMENTS_GUIDE.md) - Topology visualization with IP addresses
-- [Diagnostics System](DIAGNOSTICS_IMPROVEMENTS.md) - Cluster diagnostics and health checks
-- [AKS Arc Integration](AKS_ARC_IMPLEMENTATION_SUMMARY.md) - AKS Arc specific features
+- [Network Topology](docs/development/VISUAL_IMPROVEMENTS_GUIDE.md) - Topology visualization and network analysis
+- [Diagnostics System](docs/development/DIAGNOSTICS_IMPROVEMENTS.md) - Cluster diagnostics and health checks
+- [AKS Arc Integration](docs/development/AKS_ARC_IMPLEMENTATION_SUMMARY.md) - AKS Arc specific features
 
 ---
 
@@ -262,9 +261,9 @@ Create `backend/.env` (optional - defaults work for most cases):
 API_PORT=8080                                    # Web UI and API port
 LOG_LEVEL=INFO                                   # DEBUG, INFO, WARN, ERROR
 
-# AI Configuration (Optional)
-FOUNDRY_ENDPOINT=http://localhost:11434          # Ollama endpoint
-FOUNDRY_MODEL=llama2                             # Default AI model
+# AI Configuration (Optional - auto-detected if Ollama/Foundry running)
+FOUNDRY_ENDPOINT=http://localhost:11434          # Ollama/Foundry endpoint
+FOUNDRY_MODEL=llama2                             # Default AI model (can be changed in UI)
 FOUNDRY_TIMEOUT=30.0                             # Request timeout
 
 # Kubernetes Configuration (Auto-detected)
@@ -273,7 +272,7 @@ KUBECONFIG=~/.kube/config                        # Path to kubeconfig file
 
 ### Setting Up AI Features (Optional)
 
-1. **Install Ollama**:
+1. **Install Ollama or Azure AI Foundry Local**:
    ```bash
    # macOS/Linux
    curl -fsSL https://ollama.ai/install.sh | sh
@@ -281,14 +280,16 @@ KUBECONFIG=~/.kube/config                        # Path to kubeconfig file
    # Windows: Download from https://ollama.ai/
    ```
 
-2. **Pull a model**:
+2. **Start Ollama** (runs on port 11434 by default):
    ```bash
-   ollama pull llama2
-   # or for faster responses:
-   ollama pull tinyllama
+   ollama serve
    ```
 
-3. **Start the tool** - it will auto-detect Ollama!
+3. **Select and Download Models** - Use the UI dropdown in the Foundry Control panel:
+   - The UI will detect available models
+   - Select a model from the dropdown (e.g., llama2, phi-3, qwen)
+   - Click to download and start the model
+   - No manual `ollama pull` commands needed!
 
 **Without Ollama:** All features work except natural language chat. You can still use topology, diagnostics, and monitoring.
 

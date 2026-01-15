@@ -1,0 +1,16 @@
+[Unit]
+Description=K8s AI Assistant - AIOps Monitoring Tool
+After=network.target
+
+[Service]
+Type=simple
+User=aiops
+WorkingDirectory=/opt/aksarc-foundrylocal-aiops/backend
+Environment="PATH=/usr/bin:/usr/local/bin"
+Environment="KUBECONFIG=/home/aiops/.kube/config"
+ExecStart=/usr/bin/python3 /opt/aksarc-foundrylocal-aiops/backend/run.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

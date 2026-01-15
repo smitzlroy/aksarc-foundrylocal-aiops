@@ -179,7 +179,14 @@ Icon
 REFACTORING_*.md
 SECURITY_AUDIT.md
 TOPOLOGY_ENHANCEMENTS.md
+REDESIGN_*.md
+UI_REDESIGN_*.md
+STARTING_*.md
 *_NOTES.md
 *_INTERNAL.md
 *_TODO.md
+*_COMPLETE.md
 DEV_*.md
+
+# Development Documentation (keep in repo but ignored from tracking)
+docs/development/
