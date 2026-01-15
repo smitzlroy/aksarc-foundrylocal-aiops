@@ -507,7 +507,8 @@ async def get_topology():
                 "namespace": pod.namespace,
                 "node": pod.node,
                 "ip": pod.ip,
-                "phase": pod.phase.value,
+                "status": pod.phase.value,  # Frontend expects 'status' not 'phase'
+                "phase": pod.phase.value,   # Keep for backwards compatibility
                 "restarts": pod.restarts,
                 "labels": pod.labels
             })
