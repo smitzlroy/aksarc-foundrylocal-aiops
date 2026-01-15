@@ -79,7 +79,8 @@ class NetworkAnalyzer:
                 'labels': pod.metadata.labels or {},
                 'ports': self._extract_pod_ports(pod),
                 'service_account': pod.spec.service_account_name,
-                'phase': pod.status.phase
+                'status': pod.status.phase,  # Frontend expects 'status'
+                'phase': pod.status.phase    # Keep for backwards compatibility
             })
         
         return pods
