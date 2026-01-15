@@ -1313,6 +1313,12 @@
                     const helpDiv = document.getElementById('foundryHelp');
                     if (helpDiv) helpDiv.style.display = 'none';
                     
+                    // Set dropdown to show running model
+                    if (data.model && modelSelect) {
+                        modelSelect.value = data.model;
+                        modelSelect.disabled = true; // Disable while running
+                    }
+                    
                     // Populate models
                     if (data.available_models && data.available_models.length > 0) {
                         console.log('Populating', data.available_models.length, 'models');
@@ -1351,6 +1357,9 @@
                     startBtn.style.display = 'block';
                     stopBtn.style.display = 'none';
                     restartBtn.style.display = 'none';
+                    
+                    // Re-enable dropdown when stopped
+                    if (modelSelect) modelSelect.disabled = false;
                     
                     // Show help text
                     const helpDiv = document.getElementById('foundryHelp');
@@ -1691,7 +1700,11 @@
                 const nodeId = `pod-${pod.namespace}-${pod.name}`;
                 if (!nodeIds.has(nodeId)) {
                     nodeIds.add(nodeId);
-                    const statusColor = pod.status === 'Running' ? '#10b981' : pod.status === 'Pending' ? '#f59e0b' : '#ef4444';
+                    // Color coding: Green=Running, Orange=Pending, Blue=Succeeded, Red=Failed/Error
+                    let statusColor = '#ef4444'; // Default red for errors
+                    if (pod.status === 'Running') statusColor = '#10b981'; // Green
+                    else if (pod.status === 'Pending') statusColor = '#f59e0b'; // Orange
+                    else if (pod.status === 'Succeeded') statusColor = '#3b82f6'; // Blue for completed jobs
                     nodes.push({
                         id: nodeId,
                         label: pod.name,
@@ -1867,9 +1880,13 @@
                     <div style="width: 20px; height: 20px; background: #f59e0b; border-radius: 50%;"></div>
                     <span>Pod (Pending)</span>
                 </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <div style="width: 20px; height: 20px; background: #3b82f6; border-radius: 50%;"></div>
+                    <span>Pod (Succeeded)</span>
+                </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <div style="width: 20px; height: 20px; background: #ef4444; border-radius: 50%;"></div>
-                    <span>Pod (Error)</span>
+                    <span>Pod (Failed/Error)</span>
                 </div>
                 <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); color: var(--text-secondary); font-size: 11px;">
                     💡 Use mouse wheel to zoom<br>
