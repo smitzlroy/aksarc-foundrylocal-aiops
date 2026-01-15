@@ -1038,6 +1038,9 @@
             <div class="card foundry">
                 <h2>🤖 Foundry Control</h2>
                 <div id="foundryStatusText" class="foundry-status">Checking...</div>
+                <div id="foundryHelp" style="font-size: 11px; color: var(--text-secondary); margin: 8px 0; display: none;">
+                    💡 Select a model, then click Start. ✅ = Ready instantly | 📦 = Will download first
+                </div>
                 <select class="model-select" id="modelSelect" title="Select AI model to run" aria-label="Model selection">
                     <option value="">Loading models...</option>
                 </select>
@@ -1294,6 +1297,10 @@
                     stopBtn.style.display = 'block';
                     restartBtn.style.display = 'block';
                     
+                    // Hide help text when running
+                    const helpDiv = document.getElementById('foundryHelp');
+                    if (helpDiv) helpDiv.style.display = 'none';
+                    
                     // Populate models
                     if (data.available_models && data.available_models.length > 0) {
                         console.log('Populating', data.available_models.length, 'models');
@@ -1333,28 +1340,58 @@
                     stopBtn.style.display = 'none';
                     restartBtn.style.display = 'none';
                     
+                    // Show help text
+                    const helpDiv = document.getElementById('foundryHelp');
+                    if (helpDiv) helpDiv.style.display = 'block';
+                    
                     // Populate models
                     if (data.available_models && data.available_models.length > 0) {
                         console.log('Populating', data.available_models.length, 'models (not running)');
                         
-                        // Add a default "Select a model..." option
-                        let options = '<option value="">📋 Select a model...</option>';
-                        options += data.available_models.map(m => {
-                            const modelName = typeof m === 'string' ? m : m.name;
-                            const downloaded = typeof m === 'object' && m.downloaded;
-                            const icon = downloaded ? '✅ ' : '📦 ';
-                            const suffix = downloaded ? ' (ready - no download needed)' : ' (will download on first use)';
-                            return `<option value="${modelName}">${icon}${modelName}${suffix}</option>`;
-                        }).join('');
-                        modelSelect.innerHTML = options;
+                        // Separate downloaded and not downloaded models
+                        const downloaded = data.available_models.filter(m => 
+                            typeof m === 'object' && m.downloaded === true
+                        );
+                        const notDownloaded = data.available_models.filter(m => 
+                            typeof m === 'string' || (typeof m === 'object' && m.downloaded !== true)
+                        );
                         
-                        // Enable start button now that models are loaded
+                        console.log('Downloaded models:', downloaded.length);
+                        console.log('Not downloaded:', notDownloaded.length);
+                        if (downloaded.length > 0) {
+                            console.log('✅ Ready to use:', downloaded.map(m => m.name).join(', '));
+                        }
+                        
+                        let options = '<option value="" disabled selected>📋 Select a model to start...</option>';
+                        
+                        if (downloaded.length > 0) {
+                            options += '<optgroup label="✅ Downloaded & Ready">';
+                            downloaded.forEach(m => {
+                                const size = m.size ? ` (${m.size})` : '';
+                                options += `<option value="${m.name}">✅ ${m.name}${size}</option>`;
+                            });
+                            options += '</optgroup>';
+                        }
+                        
+                        if (notDownloaded.length > 0) {
+                            options += '<optgroup label="📦 Available to Download">';
+                            notDownloaded.forEach(m => {
+                                const modelName = typeof m === 'string' ? m : m.name;
+                                const size = typeof m === 'object' && m.size ? ` (${m.size})` : '';
+                                options += `<option value="${modelName}">📦 ${modelName}${size}</option>`;
+                            });
+                            options += '</optgroup>';
+                        }
+                        
+                        modelSelect.innerHTML = options;
                         startBtn.disabled = false;
                     } else {
                         console.log('No models found in response');
-                        modelSelect.innerHTML = '<option value="">No models found</option>';
+                        modelSelect.innerHTML = '<option value="">No models available</option>';
                         startBtn.disabled = true;
                         startBtn.title = 'No models available';
+                        const helpDiv = document.getElementById('foundryHelp');
+                        if (helpDiv) helpDiv.style.display = 'none';
                     }
                 }
             } catch (error) {
