@@ -238,7 +238,14 @@ async def root():
     """Serve the UI."""
     # Get path to index.html (go up from backend/src to workspace root)
     html_path = Path(__file__).parent.parent.parent / "index.html"
-    return FileResponse(html_path)
+    return FileResponse(
+        html_path,
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
 
 
 if __name__ == "__main__":
