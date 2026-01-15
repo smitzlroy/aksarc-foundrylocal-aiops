@@ -21,8 +21,8 @@
     --accent-error: #ff4444;
     
     /* UI Elements */
-    --border-color: #2a2a2a;
-    --border-subtle: #1a1a1a;
+    --border-color: #3a3a3a;
+    --border-subtle: #2a2a2a;
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
@@ -84,7 +84,7 @@ body {
 /* Cards & Containers */
 .card {
     background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
+    border: 1.5px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: var(--space-md);
     box-shadow: var(--shadow-sm);
