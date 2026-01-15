@@ -186,7 +186,18 @@ STARTING_*.md
 *_INTERNAL.md
 *_TODO.md
 *_COMPLETE.md
+*_SUMMARY.md
+*_RECOMMENDATIONS.md
 DEV_*.md
+TODO_*.md
+FOUNDRY_*.md
+CLEANUP_*.md
+REPO_*.md
+
+# Temporary scripts
+cleanup-*.ps1
+complete-*.ps1
+test-*.ps1
 
 # Development Documentation (keep in repo but ignored from tracking)
 docs/development/
