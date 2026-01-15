@@ -173,3 +173,13 @@ dist/
 .AppleDouble
 .LSOverride
 Icon
+
+# Internal Documentation - DO NOT COMMIT
+# These are development notes, not public documentation
+REFACTORING_*.md
+SECURITY_AUDIT.md
+TOPOLOGY_ENHANCEMENTS.md
+*_NOTES.md
+*_INTERNAL.md
+*_TODO.md
+DEV_*.md

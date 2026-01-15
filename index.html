@@ -7,6 +7,8 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>K8s AI Assistant v2</title>
+    <!-- vis-network for interactive topology graphs -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
     <style>
         :root {
             --bg-primary: #1a1d2e;
@@ -471,7 +473,9 @@
         .topology-container {
             flex: 1;
             overflow: auto;
-            padding: 20px;
+            padding: 0;
+            position: relative;
+            background: var(--bg-primary);
         }
         
         .topology-loading {
@@ -480,7 +484,167 @@
             justify-content: center;
             height: 100%;
             color: var(--text-secondary);
+            font-size: 16px;
+        }
+        
+        /* View Mode Selector */
+        .view-mode-selector {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 4px;
+        }
+        
+        .view-mode-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .view-mode-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .view-mode-btn.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+        
+        /* Dropdown Menu */
+        .dropdown {
+            position: relative;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 4px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            min-width: 180px;
+            z-index: 1000;
+        }
+        
+        .dropdown-menu button {
+            width: 100%;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            text-align: left;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        
+        .dropdown-menu button:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .dropdown-menu button:first-child {
+            border-radius: 6px 6px 0 0;
+        }
+        
+        .dropdown-menu button:last-child {
+            border-radius: 0 0 6px 6px;
+        }
+        
+        /* Network Graph View */
+        #networkGraph {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+        }
+        
+        /* Architecture Diagram View */
+        #architectureView {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            padding: 40px;
+        }
+        
+        .arch-layer {
+            margin-bottom: 40px;
+        }
+        
+        .arch-layer-title {
+            text-align: center;
             font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .arch-nodes {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .arch-node {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 180px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        
+        .arch-node:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            border-color: var(--accent-primary);
+        }
+        
+        .arch-node-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+        
+        .arch-node-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .arch-node-details {
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .arch-connector {
+            text-align: center;
+            color: var(--accent-primary);
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        
+        /* List View */
+        #listView {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            padding: 20px;
         }
         
         .topology-grid {
@@ -958,11 +1122,34 @@
         
         <!-- Topology Modal -->
         <div id="topologyModal" class="modal" style="display: none;">
-            <div class="modal-content">
+            <div class="modal-content" style="max-width: 95vw; max-height: 95vh; width: 95vw; height: 95vh;">
                 <div class="modal-header">
                     <h2>🗺️ Cluster Network Topology</h2>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="action-button" onclick="exportTopology()" title="Export topology data">💾 Export</button>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <!-- View Mode Switcher -->
+                        <div class="view-mode-selector">
+                            <button class="view-mode-btn active" data-mode="graph" onclick="switchTopologyView('graph')" title="Interactive Network Graph">
+                                🕸️ Graph
+                            </button>
+                            <button class="view-mode-btn" data-mode="architecture" onclick="switchTopologyView('architecture')" title="Architecture Diagram">
+                                🏗️ Architecture
+                            </button>
+                            <button class="view-mode-btn" data-mode="list" onclick="switchTopologyView('list')" title="List View">
+                                📋 List
+                            </button>
+                        </div>
+                        <div style="border-left: 1px solid var(--border-color); height: 24px; margin: 0 4px;"></div>
+                        <!-- Export Options -->
+                        <div class="dropdown">
+                            <button class="action-button" onclick="toggleExportMenu()" title="Export options">
+                                💾 Export ▾
+                            </button>
+                            <div id="exportMenu" class="dropdown-menu" style="display: none;">
+                                <button onclick="exportTopologyAs('png')">🖼️ Export as PNG</button>
+                                <button onclick="exportTopologyAs('svg')">📐 Export as SVG</button>
+                                <button onclick="exportTopologyAs('json')">📄 Export as JSON</button>
+                            </div>
+                        </div>
                         <button class="close-button" onclick="closeTopology()">✕</button>
                     </div>
                 </div>
@@ -1349,25 +1536,291 @@
             const container = document.getElementById('topologyView');
             modal.style.display = 'flex';
             
+            // Reset view mode
+            window.currentTopologyView = 'graph';
+            document.querySelectorAll('.view-mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === 'graph');
+            });
+            
             try {
                 const response = await fetch(`${API_BASE}/topology/analyze`);
                 const data = await response.json();
                 
                 console.log('Topology data:', data);
                 
-                // Store for export functionality
+                // Store for export and view switching
                 window.topologyData = data;
                 
-                // Build enhanced topology with network dependencies
-                renderNetworkTopology(container, data);
+                // Render initial view (graph)
+                renderTopologyView('graph', container, data);
                 
             } catch (error) {
-                container.innerHTML = `<div style="color: var(--accent-error); text-align: center;">Error loading topology: ${error.message}</div>`;
+                container.innerHTML = `<div style="color: var(--accent-error); text-align: center; padding: 40px; font-size: 16px;">Error loading topology: ${error.message}</div>`;
             }
         }
         
-        // Render network topology with D3.js-style visualization
-        function renderNetworkTopology(container, data) {
+        // Switch between topology views
+        function switchTopologyView(mode) {
+            if (!window.topologyData) return;
+            
+            window.currentTopologyView = mode;
+            
+            // Update button states
+            document.querySelectorAll('.view-mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            
+            const container = document.getElementById('topologyView');
+            renderTopologyView(mode, container, window.topologyData);
+        }
+        
+        // Render topology based on view mode
+        function renderTopologyView(mode, container, data) {
+            container.innerHTML = ''; // Clear previous content
+            
+            if (mode === 'graph') {
+                renderNetworkGraph(container, data);
+            } else if (mode === 'architecture') {
+                renderArchitectureDiagram(container, data);
+            } else if (mode === 'list') {
+                renderListView(container, data);
+            }
+        }
+        
+        // Render interactive network graph using vis-network
+        function renderNetworkGraph(container, data) {
+            const pods = data.pods || [];
+            const services = data.services || [];
+            const dependencies = data.dependencies || [];
+            const communicationMatrix = data.communication_matrix || [];
+            
+            // Create graph container
+            const graphDiv = document.createElement('div');
+            graphDiv.id = 'networkGraph';
+            graphDiv.style.width = '100%';
+            graphDiv.style.height = '100%';
+            container.appendChild(graphDiv);
+            
+            // Build nodes and edges for vis-network
+            const nodes = [];
+            const edges = [];
+            const nodeIds = new Set();
+            
+            // Add service nodes
+            services.forEach((svc, idx) => {
+                const nodeId = `svc-${svc.namespace}-${svc.name}`;
+                if (!nodeIds.has(nodeId)) {
+                    nodeIds.add(nodeId);
+                    nodes.push({
+                        id: nodeId,
+                        label: `${svc.name}\\n(${svc.namespace})`,
+                        title: `Service: ${svc.name}<br>Namespace: ${svc.namespace}<br>Cluster IP: ${svc.cluster_ip || 'N/A'}<br>Type: ${svc.type || 'ClusterIP'}`,
+                        shape: 'box',
+                        color: {
+                            background: '#667eea',
+                            border: '#5a67d8',
+                            highlight: { background: '#7c3aed', border: '#6d28d9' }
+                        },
+                        font: { color: '#ffffff', size: 14, face: 'Arial', bold: true },
+                        size: 25,
+                        margin: 10
+                    });
+                }
+            });
+            
+            // Add pod nodes
+            pods.forEach((pod, idx) => {
+                const nodeId = `pod-${pod.namespace}-${pod.name}`;
+                if (!nodeIds.has(nodeId)) {
+                    nodeIds.add(nodeId);
+                    const statusColor = pod.status === 'Running' ? '#10b981' : pod.status === 'Pending' ? '#f59e0b' : '#ef4444';
+                    nodes.push({
+                        id: nodeId,
+                        label: pod.name,
+                        title: `Pod: ${pod.name}<br>Namespace: ${pod.namespace}<br>IP: ${pod.ip || 'N/A'}<br>Status: ${pod.status}<br>Node: ${pod.node || 'N/A'}`,
+                        shape: 'ellipse',
+                        color: {
+                            background: statusColor,
+                            border: statusColor,
+                            highlight: { background: '#065f46', border: '#064e3b' }
+                        },
+                        font: { color: '#ffffff', size: 12 },
+                        size: 20
+                    });
+                }
+            });
+            
+            // Add namespace nodes for better organization
+            const namespaces = [...new Set([...services.map(s => s.namespace), ...pods.map(p => p.namespace)])];
+            namespaces.forEach(ns => {
+                const nodeId = `ns-${ns}`;
+                if (!nodeIds.has(nodeId)) {
+                    nodeIds.add(nodeId);
+                    nodes.push({
+                        id: nodeId,
+                        label: `📦 ${ns}`,
+                        title: `Namespace: ${ns}`,
+                        shape: 'box',
+                        color: {
+                            background: '#2a2f45',
+                            border: '#667eea',
+                            highlight: { background: '#3a3f58', border: '#7c3aed' }
+                        },
+                        font: { color: '#e2e8f0', size: 16, bold: true },
+                        size: 30,
+                        borderWidth: 2,
+                        margin: 15
+                    });
+                }
+            });
+            
+            // Connect services to their namespace
+            services.forEach(svc => {
+                const svcId = `svc-${svc.namespace}-${svc.name}`;
+                const nsId = `ns-${svc.namespace}`;
+                edges.push({
+                    from: nsId,
+                    to: svcId,
+                    arrows: { to: false },
+                    color: { color: '#64748b', opacity: 0.3 },
+                    dashes: true,
+                    width: 1
+                });
+            });
+            
+            // Connect pods to their namespace
+            pods.forEach(pod => {
+                const podId = `pod-${pod.namespace}-${pod.name}`;
+                const nsId = `ns-${pod.namespace}`;
+                edges.push({
+                    from: nsId,
+                    to: podId,
+                    arrows: { to: false },
+                    color: { color: '#64748b', opacity: 0.3 },
+                    dashes: true,
+                    width: 1
+                });
+            });
+            
+            // Add edges from dependencies
+            dependencies.forEach(dep => {
+                const svcId = `svc-${dep.namespace}-${dep.service}`;
+                
+                if (dep.target_pods && dep.target_pods.length > 0) {
+                    dep.target_pods.forEach(podName => {
+                        const podId = `pod-${dep.namespace}-${podName}`;
+                        if (nodeIds.has(svcId) && nodeIds.has(podId)) {
+                            edges.push({
+                                from: svcId,
+                                to: podId,
+                                arrows: { to: { enabled: true, scaleFactor: 0.8 } },
+                                color: { color: '#667eea', opacity: 0.8 },
+                                width: 2,
+                                smooth: { type: 'curvedCW', roundness: 0.2 },
+                                title: dep.service_ports ? dep.service_ports.map(p => `${p.protocol}:${p.port}`).join(', ') : ''
+                            });
+                        }
+                    });
+                }
+            });
+            
+            // Add edges from communication matrix
+            communicationMatrix.forEach(comm => {
+                const sourceId = `pod-${comm.source_namespace || 'default'}-${comm.source}`;
+                const targetId = `pod-${comm.target_namespace || 'default'}-${comm.target}`;
+                
+                // Try to find matching pods
+                const sourcePod = pods.find(p => p.name === comm.source);
+                const targetPod = pods.find(p => p.name === comm.target);
+                
+                if (sourcePod && targetPod) {
+                    const actualSourceId = `pod-${sourcePod.namespace}-${sourcePod.name}`;
+                    const actualTargetId = `pod-${targetPod.namespace}-${targetPod.name}`;
+                    
+                    edges.push({
+                        from: actualSourceId,
+                        to: actualTargetId,
+                        arrows: { to: { enabled: true, scaleFactor: 0.6 } },
+                        color: { color: '#f59e0b', opacity: 0.7 },
+                        width: 1.5,
+                        dashes: [5, 5],
+                        title: `${comm.protocol}:${comm.port}`,
+                        smooth: { type: 'curvedCCW', roundness: 0.2 }
+                    });
+                }
+            });
+            
+            // Create network
+            const networkData = { nodes: nodes, edges: edges };
+            const options = {
+                nodes: {
+                    borderWidth: 2,
+                    shadow: { enabled: true, color: 'rgba(0,0,0,0.5)', size: 10, x: 2, y: 2 }
+                },
+                edges: {
+                    shadow: { enabled: true, color: 'rgba(0,0,0,0.3)', size: 5, x: 1, y: 1 },
+                    smooth: { enabled: true, type: 'continuous' }
+                },
+                physics: {
+                    enabled: true,
+                    stabilization: { iterations: 200 },
+                    barnesHut: {
+                        gravitationalConstant: -8000,
+                        centralGravity: 0.3,
+                        springLength: 150,
+                        springConstant: 0.04,
+                        damping: 0.09
+                    }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 100,
+                    navigationButtons: true,
+                    keyboard: true,
+                    zoomView: true,
+                    dragView: true
+                },
+                layout: {
+                    improvedLayout: true,
+                    hierarchical: false
+                }
+            };
+            
+            window.topologyNetwork = new vis.Network(graphDiv, networkData, options);
+            
+            // Add legend
+            const legend = document.createElement('div');
+            legend.style.cssText = 'position: absolute; top: 20px; right: 20px; background: var(--bg-card); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 10;';
+            legend.innerHTML = `
+                <div style="font-weight: 700; margin-bottom: 12px; color: var(--accent-primary);">Legend</div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <div style="width: 20px; height: 20px; background: #2a2f45; border: 2px solid #667eea; border-radius: 4px;"></div>
+                    <span>Namespace</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <div style="width: 20px; height: 20px; background: #667eea; border-radius: 4px;"></div>
+                    <span>Service</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <div style="width: 20px; height: 20px; background: #10b981; border-radius: 50%;"></div>
+                    <span>Pod (Running)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <div style="width: 20px; height: 20px; background: #f59e0b; border-radius: 50%;"></div>
+                    <span>Pod (Pending)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 20px; background: #ef4444; border-radius: 50%;"></div>
+                    <span>Pod (Error)</span>
+                </div>
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); color: var(--text-secondary); font-size: 11px;">
+                    💡 Use mouse wheel to zoom<br>
+                    🖱️ Drag to pan<br>
+                    🎯 Click nodes for details
+                </div>
+            `;
+            container.appendChild(legend);
+        }
             // Safe access with default empty arrays
             const pods = data.pods || [];
             const services = data.services || [];
@@ -1508,21 +1961,271 @@
             container.innerHTML = html;
         }
         
+        // Render architecture diagram view
+        function renderArchitectureDiagram(container, data) {
+            const pods = data.pods || [];
+            const services = data.services || [];
+            const namespaces = [...new Set([...services.map(s => s.namespace), ...pods.map(p => p.namespace)])];
+            
+            const archDiv = document.createElement('div');
+            archDiv.id = 'architectureView';
+            container.appendChild(archDiv);
+            
+            let html = '';
+            
+            // Group by namespace
+            namespaces.forEach(ns => {
+                const nsServices = services.filter(s => s.namespace === ns);
+                const nsPods = pods.filter(p => p.namespace === ns);
+                
+                html += '<div class="arch-layer">';
+                html += `<div class="arch-layer-title">📦 Namespace: ${ns}</div>`;
+                
+                // Services layer
+                if (nsServices.length > 0) {
+                    html += '<div class="arch-layer-title" style="font-size: 12px; margin-top: 20px;">🌐 Services</div>';
+                    html += '<div class="arch-nodes">';
+                    nsServices.forEach(svc => {
+                        html += '<div class="arch-node">';
+                        html += '<div class="arch-node-icon">⚙️</div>';
+                        html += `<div class="arch-node-name">${svc.name}</div>`;
+                        html += '<div class="arch-node-details">';
+                        html += `Type: ${svc.type || 'ClusterIP'}<br>`;
+                        html += `Cluster IP: ${svc.cluster_ip || 'N/A'}<br>`;
+                        if (svc.ports && svc.ports.length > 0) {
+                            html += `Ports: ${svc.ports.map(p => `${p.port}:${p.target_port}`).join(', ')}`;
+                        }
+                        html += '</div>';
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                    
+                    html += '<div class="arch-connector">⬇️</div>';
+                }
+                
+                // Pods layer
+                if (nsPods.length > 0) {
+                    html += '<div class="arch-layer-title" style="font-size: 12px;">🎯 Pods</div>';
+                    html += '<div class="arch-nodes">';
+                    nsPods.forEach(pod => {
+                        const statusEmoji = pod.status === 'Running' ? '✅' : pod.status === 'Pending' ? '⏳' : '❌';
+                        html += '<div class="arch-node">';
+                        html += `<div class="arch-node-icon">${statusEmoji}</div>`;
+                        html += `<div class="arch-node-name">${pod.name}</div>`;
+                        html += '<div class="arch-node-details">';
+                        html += `Status: ${pod.status}<br>`;
+                        html += `IP: ${pod.ip || 'N/A'}<br>`;
+                        html += `Node: ${pod.node || 'N/A'}`;
+                        html += '</div>';
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+            });
+            
+            if (html === '') {
+                html = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);">No architecture data available</div>';
+            }
+            
+            archDiv.innerHTML = html;
+        }
+        
+        // Render list view (original enhanced view)
+        function renderListView(container, data) {
+            const listDiv = document.createElement('div');
+            listDiv.id = 'listView';
+            container.appendChild(listDiv);
+            
+            // Safe access with default empty arrays
+            const pods = data.pods || [];
+            const services = data.services || [];
+            const dependencies = data.dependencies || [];
+            const networkPolicies = data.network_policies || [];
+            const communicationMatrix = data.communication_matrix || [];
+            
+            let html = '<div class="topology-summary">';
+            html += `<div class="summary-item"><strong>${pods.length}</strong> Pods</div>`;
+            html += `<div class="summary-item"><strong>${services.length}</strong> Services</div>`;
+            html += `<div class="summary-item"><strong>${dependencies.length}</strong> Dependencies</div>`;
+            html += `<div class="summary-item"><strong>${networkPolicies.length}</strong> Network Policies</div>`;
+            html += '</div>';
+            
+            // Communication matrix
+            if (communicationMatrix && communicationMatrix.length > 0) {
+                html += '<div class="topology-section">';
+                html += '<h3>🔗 Service Communication Matrix</h3>';
+                html += '<div class="communication-matrix">';
+                
+                communicationMatrix.forEach(comm => {
+                    // Find pod IPs
+                    const sourcePod = pods.find(p => p.name === comm.source);
+                    const targetPod = pods.find(p => p.name === comm.target);
+                    
+                    html += '<div class="comm-flow">';
+                    html += `<div class="comm-source">${comm.source}`;
+                    if (sourcePod && sourcePod.ip) {
+                        html += ` <span class="ip-badge" title="Pod IP">📍 ${sourcePod.ip}</span>`;
+                    }
+                    html += '</div>';
+                    html += '<div class="comm-arrow">→</div>';
+                    html += `<div class="comm-target">${comm.target}`;
+                    if (targetPod && targetPod.ip) {
+                        html += ` <span class="ip-badge" title="Pod IP">📍 ${targetPod.ip}</span>`;
+                    }
+                    html += '</div>';
+                    html += `<div class="comm-details">${comm.protocol}:${comm.port}`;
+                    if (comm.target_port) {
+                        html += `→${comm.target_port}`;
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            // Dependencies
+            if (dependencies && dependencies.length > 0) {
+                html += '<div class="topology-section">';
+                html += '<h3>🎯 Service Dependencies</h3>';
+                
+                dependencies.forEach(dep => {
+                    // Find service details
+                    const service = services.find(s => s.name === dep.service && s.namespace === dep.namespace);
+                    
+                    html += '<div class="dependency-card">';
+                    html += `<h4>${dep.service} (${dep.namespace})</h4>`;
+                    
+                    // Show service IPs
+                    if (service) {
+                        html += '<div class="service-ips" style="margin: 8px 0; font-size: 0.9em;">';
+                        if (service.cluster_ip) {
+                            html += `<span class="ip-badge" title="Cluster IP">🌐 ${service.cluster_ip}</span> `;
+                        }
+                        if (service.external_ip && service.external_ip !== 'None') {
+                            html += `<span class="ip-badge" title="External IP" style="background: #4a90e2; color: white;">🌍 ${service.external_ip}</span>`;
+                        }
+                        html += '</div>';
+                    }
+                    
+                    if (dep.service_ports && dep.service_ports.length > 0) {
+                        html += '<div class="port-list">';
+                        dep.service_ports.forEach(port => {
+                            html += `<span class="port-badge">${port.protocol}:${port.port}→${port.target_port}</span>`;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    // Show target pods with IPs
+                    if (dep.target_pods && dep.target_pods.length > 0) {
+                        html += '<div class="target-pods" style="margin-top: 10px;">';
+                        html += `<strong>Target Pods (${dep.target_pods.length}):</strong><br>`;
+                        dep.target_pods.forEach(podName => {
+                            const pod = pods.find(p => p.name === podName);
+                            html += `<div style="margin: 4px 0; padding-left: 10px;">→ ${podName}`;
+                            if (pod && pod.ip) {
+                                html += ` <span class="ip-badge" title="Pod IP">📍 ${pod.ip}</span>`;
+                            }
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    } else {
+                        html += `<div class="target-pods">→ ${dep.target_pods ? dep.target_pods.length : 0} target pod(s)</div>`;
+                    }
+                    
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+            }
+            
+            // Network policies
+            if (data.network_policy_analysis && data.network_policy_analysis.affected_pods) {
+                html += '<div class="topology-section">';
+                html += '<h3>🛡️ Network Policy Coverage</h3>';
+                html += `<p>${data.network_policy_analysis.affected_pods.length} pods affected by network policies</p>`;
+                if (data.network_policy_analysis.unrestricted_namespaces && 
+                    data.network_policy_analysis.unrestricted_namespaces.length > 0) {
+                    html += '<div class="warning-box">';
+                    html += '<strong>⚠️ Unrestricted Namespaces:</strong> ';
+                    html += data.network_policy_analysis.unrestricted_namespaces.join(', ');
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+            
+            // Namespace connectivity
+            if (data.namespace_connectivity) {
+                html += '<div class="topology-section">';
+                html += '<h3>🌐 Namespace Connectivity</h3>';
+                html += '<div class="connectivity-grid">';
+                
+                Object.entries(data.namespace_connectivity).forEach(([ns, info]) => {
+                    const targets = info.can_access || [];
+                    const policyStatus = info.has_policies ? '🔒' : '🔓';
+                    html += '<div class="connectivity-item">';
+                    html += `<strong>${policyStatus} ${ns}</strong> (${info.pod_count} pods) → ${targets.join(', ')}`;
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            listDiv.innerHTML = html;
+        }
+        
         // Close topology modal
         function closeTopology() {
             document.getElementById('topologyModal').style.display = 'none';
+            // Clean up network if it exists
+            if (window.topologyNetwork) {
+                window.topologyNetwork.destroy();
+                window.topologyNetwork = null;
+            }
         }
         
-        // Export topology data to JSON file
-        function exportTopology() {
+        // Toggle export menu
+        function toggleExportMenu() {
+            const menu = document.getElementById('exportMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Close export menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = event.target.closest('.dropdown');
+            if (!dropdown) {
+                const menus = document.querySelectorAll('.dropdown-menu');
+                menus.forEach(menu => menu.style.display = 'none');
+            }
+        });
+        
+        // Export topology in different formats
+        async function exportTopologyAs(format) {
             if (!window.topologyData) {
                 alert('No topology data available to export');
                 return;
             }
             
-            const timestamp = new Date().toISOString().split('T')[0];
-            const filename = `topology-${timestamp}.json`;
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
             
+            if (format === 'json') {
+                exportTopologyJSON(timestamp);
+            } else if (format === 'png') {
+                exportTopologyImage('png', timestamp);
+            } else if (format === 'svg') {
+                exportTopologyImage('svg', timestamp);
+            }
+            
+            // Close the export menu
+            document.getElementById('exportMenu').style.display = 'none';
+        }
+        
+        // Export topology data to JSON file
+        function exportTopologyJSON(timestamp) {
             const exportData = {
                 exported_at: new Date().toISOString(),
                 cluster_info: {
@@ -1538,13 +2241,61 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = filename;
+            a.download = `topology-${timestamp}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            console.log(`Topology exported to ${filename}`);
+            console.log(`Topology exported to topology-${timestamp}.json`);
+        }
+        
+        // Export topology as image (PNG or SVG)
+        function exportTopologyImage(format, timestamp) {
+            if (!window.topologyNetwork && window.currentTopologyView !== 'graph') {
+                alert('Image export is only available for Graph view. Please switch to Graph view first.');
+                return;
+            }
+            
+            if (!window.topologyNetwork) {
+                alert('Graph not initialized. Please wait for the graph to load.');
+                return;
+            }
+            
+            try {
+                // Get canvas from vis-network
+                const canvas = document.querySelector('#networkGraph canvas');
+                if (!canvas) {
+                    alert('Unable to find graph canvas for export.');
+                    return;
+                }
+                
+                if (format === 'png') {
+                    canvas.toBlob(function(blob) {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `topology-${timestamp}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        console.log(`Topology exported to topology-${timestamp}.png`);
+                    });
+                } else if (format === 'svg') {
+                    // For SVG, we need to create an SVG representation
+                    // This is a simplified version - vis-network doesn't natively support SVG export
+                    alert('SVG export is not fully supported yet. Please use PNG export instead.');
+                }
+            } catch (error) {
+                console.error('Export error:', error);
+                alert(`Failed to export: ${error.message}`);
+            }
+        }
+        
+        // Legacy export function (kept for backward compatibility)
+        function exportTopology() {
+            exportTopologyAs('json');
         }
         
         // Show AKS Arc diagnostics modal
