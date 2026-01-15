@@ -6,181 +6,222 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>K8s AI Assistant v2</title>
+    <title>K8s AI Operations Center</title>
+    <!-- Modern Theme -->
+    <link rel="stylesheet" href="modern-theme.css">
     <!-- vis-network for interactive topology graphs -->
     <script type="text/javascript" src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
     <style>
-        :root {
-            --bg-primary: #1a1d2e;
-            --bg-secondary: #22263a;
-            --bg-tertiary: #2a2f45;
-            --bg-card: #252936;
-            --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --accent-primary: #667eea;
-            --accent-secondary: #764ba2;
-            --accent-success: #10b981;
-            --accent-warning: #f59e0b;
-            --accent-error: #ef4444;
-            --border-color: #3a3f58;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        /* Page-specific overrides for modern theme */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            padding: 16px;
             height: 100vh;
             overflow: hidden;
-            padding: 12px;
-            color: var(--text-primary);
         }
         
+    <style>
+        /* Page-specific layout */
         .container {
-            height: calc(100vh - 24px);
+            height: calc(100vh - 32px);
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
         
-        /* Top Bar - Header, Stats, Controls */
+        /* Header Bar */
         .top-bar {
             display: grid;
             grid-template-columns: 1fr auto auto;
-            gap: 10px;
+            gap: 12px;
         }
         
-        .card {
-            background: var(--bg-card);
-            border-radius: 8px;
-            padding: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-color);
-        }
-        
-        /* Header */
         .header h1 {
-            font-size: 20px;
-            color: var(--accent-primary);
-            margin-bottom: 2px;
-            font-weight: 700;
+            font-size: 22px;
+            color: var(--accent-cyan);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .header p {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text-secondary);
         }
         
         .header-badges {
             display: flex;
-            gap: 6px;
-            margin-top: 4px;
-            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
         }
         
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        
-        .status-badge.online {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--accent-success);
-            border: 1px solid var(--accent-success);
-        }
-        
-        .status-badge.offline {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--accent-error);
-            border: 1px solid var(--accent-error);
-        }
-        
-        .platform-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 600;
-            background: rgba(102, 126, 234, 0.2);
-            color: var(--accent-primary);
-            border: 1px solid var(--accent-primary);
-        }
-        
-        .platform-badge.aks-arc {
-            background: rgba(0, 120, 212, 0.2);
-            color: #60a5fa;
-            border: 1px solid #60a5fa;
-        }
-        
-        .platform-badge.k3s {
-            background: rgba(251, 146, 60, 0.2);
-            color: #fb923c;
-            border: 1px solid #fb923c;
-        }
-        
-        /* Cluster Stats */
+        /* Stats Panel */
         .stats {
-            width: 260px;
+            width: 280px;
         }
         
         .stats h2 {
-            font-size: 13px;
-            margin-bottom: 8px;
-            color: var(--text-primary);
+            font-size: 12px;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .stat-grid {
             display: flex;
-            gap: 6px;
+            gap: 8px;
         }
         
         .stat-item {
             flex: 1;
             text-align: center;
-            padding: 6px;
-            background: var(--bg-tertiary);
-            border-radius: 5px;
+            padding: 12px 8px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
         }
         
         .stat-value {
-            font-size: 18px;
+            font-size: 24px;
             font-weight: 700;
-            color: var(--accent-primary);
+            color: var(--accent-cyan);
             display: block;
+            font-family: var(--font-mono);
         }
         
         .stat-label {
-            font-size: 9px;
-            color: var(--text-secondary);
-            margin-top: 2px;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
             display: block;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
+        /* Foundry Controls */
+        .foundry {
+            width: 220px;
+        }
+        
+        .foundry h2 {
+            font-size: 12px;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .foundry-status {
+            padding: 8px;
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .foundry-status.running {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--accent-success);
+            border-color: var(--accent-success);
+        }
+        
+        .foundry-status.stopped {
+            background: rgba(255, 68, 68, 0.1);
+            color: var(--accent-error);
+            border-color: var(--accent-error);
+        }
+        
+        .model-select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .control-button {
+            width: 100%;
+            padding: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .control-button.start {
+            background: var(--accent-success);
+            color: var(--bg-primary);
+        }
+        
+        .control-button.stop {
+            background: var(--accent-error);
+            color: white;
+        }
+        
+        .control-button.restart {
+            background: var(--accent-warning);
+            color: var(--bg-primary);
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px;
+        }
+        
+        .quick-actions h3 {
+            margin: 0;
+            color: var(--accent-cyan);
+            font-size: 13px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px;
+        }
+        
+        .action-button {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .action-button:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent-cyan);
+            transform: translateY(-1px);
+        }
+        
         /* AKS Arc Panel */
         .aksarc-panel {
-            margin-top: 10px;
+            margin-top: 12px;
         }
         
         .aksarc-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
         
         .aksarc-header h2 {
@@ -190,20 +231,8 @@
         }
         
         .diagnostic-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 5px;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .diagnostic-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
         }
         
         .aksarc-info {
@@ -215,140 +244,64 @@
         .info-item {
             display: flex;
             justify-content: space-between;
-            padding: 6px;
-            background: var(--bg-tertiary);
-            border-radius: 5px;
+            padding: 8px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
         }
         
         .info-label {
-            font-size: 10px;
+            font-size: 11px;
             color: var(--text-secondary);
             font-weight: 600;
         }
         
         .info-value {
-            font-size: 10px;
-            color: var(--text-primary);
-            font-family: 'Courier New', monospace;
-        }
-        
-        /* Foundry Controls */
-        .foundry {
-            width: 200px;
-        }
-        
-        .foundry h2 {
-            font-size: 13px;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-            font-weight: 600;
-        }
-        
-        .foundry-status {
-            padding: 6px;
-            border-radius: 5px;
-            background: var(--bg-tertiary);
-            margin-bottom: 6px;
-            font-size: 10px;
-            color: var(--text-secondary);
-        }
-        
-        .foundry-status.running {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--accent-success);
-            border: 1px solid var(--accent-success);
-        }
-        
-        .foundry-status.stopped {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--accent-error);
-            border: 1px solid var(--accent-error);
-        }
-        
-        .model-select {
-            width: 100%;
-            padding: 5px 8px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
             font-size: 11px;
-            margin-bottom: 5px;
-        }
-        
-        .model-select option {
-            background: var(--bg-secondary);
             color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
         }
         
-        .control-button {
-            width: 100%;
-            padding: 5px;
-            border-radius: 4px;
-            border: none;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 4px;
-            transition: opacity 0.2s;
-        }
-        
-        .control-button:hover {
-            opacity: 0.9;
-        }
-        
-        .control-button.start {
-            background: #28a745;
-            color: white;
-        }
-        
-        .control-button.stop {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .control-button.restart {
-            background: #ffc107;
-            color: var(--text-primary);
-        }
-        
-        /* Prompts Row */
+        /* Prompt Cards */
         .prompts-row {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
+            gap: 10px;
         }
         
         .prompt-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 10px;
-            border-radius: 6px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: transform 0.15s;
-            border: none;
+            transition: all var(--transition-fast);
             text-align: left;
-            height: 70px;
+            height: 80px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
         
         .prompt-card:hover {
+            background: var(--bg-elevated);
+            border-color: var(--accent-cyan);
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-md);
         }
         
         .prompt-card h3 {
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
+            color: var(--accent-cyan);
         }
         
         .prompt-card p {
-            font-size: 10px;
-            opacity: 0.9;
-            line-height: 1.3;
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.4;
         }
         
         /* Chat Section */
@@ -360,27 +313,29 @@
         }
         
         .chat-container {
-            background: white;
-            border-radius: 8px;
-            padding: 14px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px;
             display: flex;
             flex-direction: column;
             height: 100%;
         }
         
         .chat-header {
-            font-size: 14px;
-            color: var(--text-primary);
+            font-size: 13px;
+            color: var(--text-secondary);
             font-weight: 600;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 14px 0;
+            padding: 16px 0;
             min-height: 0;
         }
         
@@ -390,23 +345,87 @@
             align-items: center;
             justify-content: center;
             height: 100%;
-            color: #999;
+            color: var(--text-muted);
         }
         
         .empty-state-icon {
             font-size: 48px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             opacity: 0.3;
         }
         
         .empty-state-text {
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
+            color: var(--text-secondary);
         }
         
         .empty-state-subtext {
             font-size: 11px;
-            margin-top: 4px;
+            margin-top: 6px;
+            color: var(--text-muted);
+        }
+        
+        /* Messages */
+        .message {
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            max-width: 85%;
+        }
+        
+        .message.user {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+            margin-left: auto;
+            font-weight: 500;
+        }
+        
+        .message.assistant {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .message-content {
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        /* Chat Input */
+        .chat-input {
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-group input {
+            flex: 1;
+            padding: 10px 14px;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-full);
+            font-size: 13px;
+        }
+        
+        .input-group input:focus {
+            border-color: var(--accent-cyan);
+        }
+        
+        .input-group input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .send-button {
+            padding: 10px 20px;
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+            font-weight: 600;
         }
         
         /* Modal */
@@ -416,30 +435,32 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            backdrop-filter: blur(4px);
         }
         
         .modal-content {
-            background: var(--bg-card);
-            border-radius: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
             width: 90%;
-            max-width: 1200px;
-            height: 80vh;
+            max-width: 1400px;
+            height: 85vh;
             display: flex;
             flex-direction: column;
-            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
         }
         
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 20px;
+            padding: 18px 24px;
             border-bottom: 1px solid var(--border-color);
         }
         
@@ -450,18 +471,18 @@
         }
         
         .close-button {
-            background: var(--bg-tertiary);
+            background: var(--bg-elevated);
             border: 1px solid var(--border-color);
             color: var(--text-secondary);
             font-size: 20px;
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
+            transition: all var(--transition-fast);
         }
         
         .close-button:hover {
@@ -470,6 +491,7 @@
             border-color: var(--accent-error);
         }
         
+        /* Topology */
         .topology-container {
             flex: 1;
             overflow: auto;
@@ -487,35 +509,41 @@
             font-size: 16px;
         }
         
+        #networkGraph {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+        }
+        
         /* View Mode Selector */
         .view-mode-selector {
             display: flex;
             gap: 4px;
-            background: var(--bg-tertiary);
-            border-radius: 6px;
+            background: var(--bg-elevated);
+            border-radius: var(--radius-md);
             padding: 4px;
         }
         
         .view-mode-btn {
-            padding: 6px 12px;
+            padding: 8px 14px;
             border: none;
             background: transparent;
             color: var(--text-secondary);
             cursor: pointer;
-            border-radius: 4px;
-            font-size: 11px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
             font-weight: 600;
-            transition: all 0.2s;
+            transition: all var(--transition-fast);
         }
         
         .view-mode-btn:hover {
-            background: var(--bg-secondary);
+            background: var(--bg-tertiary);
             color: var(--text-primary);
         }
         
         .view-mode-btn.active {
-            background: var(--accent-primary);
-            color: white;
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
         }
         
         /* Dropdown Menu */
@@ -528,46 +556,31 @@
             top: 100%;
             right: 0;
             margin-top: 4px;
-            background: var(--bg-card);
+            background: var(--bg-elevated);
             border: 1px solid var(--border-color);
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            min-width: 180px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
             z-index: 1000;
         }
         
         .dropdown-menu button {
             width: 100%;
-            padding: 10px 16px;
+            padding: 12px 16px;
             border: none;
             background: transparent;
             color: var(--text-primary);
             text-align: left;
             cursor: pointer;
-            font-size: 12px;
-            transition: background 0.2s;
+            font-size: 13px;
+            transition: background var(--transition-fast);
         }
         
         .dropdown-menu button:hover {
             background: var(--bg-tertiary);
         }
         
-        .dropdown-menu button:first-child {
-            border-radius: 6px 6px 0 0;
-        }
-        
-        .dropdown-menu button:last-child {
-            border-radius: 0 0 6px 6px;
-        }
-        
-        /* Network Graph View */
-        #networkGraph {
-            width: 100%;
-            height: 100%;
-            background: var(--bg-primary);
-        }
-        
-        /* Architecture Diagram View */
+        /* Architecture View */
         #architectureView {
             width: 100%;
             height: 100%;
@@ -583,7 +596,7 @@
             text-align: center;
             font-size: 14px;
             font-weight: 700;
-            color: var(--accent-primary);
+            color: var(--accent-cyan);
             margin-bottom: 20px;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -598,32 +611,32 @@
         }
         
         .arch-node {
-            background: var(--bg-card);
+            background: var(--bg-tertiary);
             border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            min-width: 180px;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            min-width: 200px;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            transition: all 0.3s;
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-base);
         }
         
         .arch-node:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent-cyan);
         }
         
         .arch-node-icon {
-            font-size: 36px;
-            margin-bottom: 12px;
+            font-size: 40px;
+            margin-bottom: 14px;
         }
         
         .arch-node-name {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             color: var(--text-primary);
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         
         .arch-node-details {
@@ -634,9 +647,9 @@
         
         .arch-connector {
             text-align: center;
-            color: var(--accent-primary);
-            font-size: 24px;
-            margin: 20px 0;
+            color: var(--accent-cyan);
+            font-size: 28px;
+            margin: 24px 0;
         }
         
         /* List View */
@@ -644,44 +657,44 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            padding: 20px;
+            padding: 24px;
         }
         
         .topology-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 20px;
         }
         
         .topology-section {
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-            padding: 16px;
+            background: var(--bg-elevated);
+            border-radius: var(--radius-md);
+            padding: 18px;
             border: 1px solid var(--border-color);
         }
         
         .topology-section h3 {
-            color: var(--accent-primary);
-            margin-bottom: 12px;
-            font-size: 14px;
+            color: var(--accent-cyan);
+            margin-bottom: 14px;
+            font-size: 15px;
         }
         
         .topology-item {
-            background: var(--bg-secondary);
-            padding: 8px 12px;
-            border-radius: 4px;
-            margin-bottom: 8px;
-            border-left: 3px solid var(--accent-primary);
+            background: var(--bg-tertiary);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+            border-left: 3px solid var(--accent-cyan);
         }
         
         .topology-item-name {
             font-weight: 600;
             color: var(--text-primary);
-            font-size: 12px;
+            font-size: 13px;
         }
         
         .topology-item-details {
-            font-size: 10px;
+            font-size: 11px;
             color: var(--text-secondary);
             margin-top: 4px;
         }
@@ -695,17 +708,18 @@
         }
         
         .topology-namespace {
-            border-left-color: var(--accent-primary);
+            border-left-color: var(--accent-cyan);
         }
         
-        /* Enhanced Topology Styles */
+        /* Enhanced Topology */
         .topology-summary {
             display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding: 12px;
+            gap: 14px;
+            margin-bottom: 24px;
+            padding: 14px;
             background: var(--bg-secondary);
-            border-radius: 6px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
         }
         
         .summary-item {
@@ -717,108 +731,94 @@
         
         .summary-item strong {
             display: block;
-            font-size: 20px;
-            color: var(--accent-primary);
+            font-size: 22px;
+            color: var(--accent-cyan);
             margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
         }
         
         .communication-matrix {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
         
         .comm-flow {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px;
+            gap: 10px;
+            padding: 10px;
             background: var(--bg-secondary);
-            border-radius: 4px;
-            font-size: 11px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            border: 1px solid var(--border-color);
         }
         
         .comm-source, .comm-target {
-            padding: 4px 8px;
-            background: var(--bg-tertiary);
-            border-radius: 3px;
+            padding: 6px 10px;
+            background: var(--bg-elevated);
+            border-radius: var(--radius-sm);
             color: var(--text-primary);
-            font-family: 'Courier New', monospace;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
         }
         
         .comm-arrow {
-            color: var(--accent-primary);
+            color: var(--accent-cyan);
             font-weight: bold;
         }
         
         .comm-details {
             margin-left: auto;
-            padding: 2px 6px;
-            background: var(--accent-primary);
-            color: white;
-            border-radius: 3px;
+            padding: 3px 8px;
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+            border-radius: var(--radius-full);
             font-size: 10px;
             font-weight: 600;
         }
         
         .dependency-card {
             background: var(--bg-secondary);
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            border-left: 3px solid var(--accent-primary);
+            padding: 14px;
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            border-left: 3px solid var(--accent-cyan);
         }
         
         .dependency-card h4 {
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-primary);
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         
         .port-list {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             flex-wrap: wrap;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
         
         .port-badge {
-            background: var(--bg-tertiary);
-            color: var(--accent-primary);
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 10px;
-            font-family: 'Courier New', monospace;
+            background: var(--bg-elevated);
+            color: var(--accent-cyan);
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid var(--border-color);
         }
         
         .ip-badge {
-            background: #10b981;
+            background: var(--accent-success);
             color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-family: 'Courier New', monospace;
+            padding: 3px 10px;
+            border-radius: var(--radius-full);
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
             display: inline-block;
             margin: 0 4px;
-            font-weight: 500;
-        }
-        
-        .action-button {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-        
-        .action-button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            font-weight: 600;
         }
         
         .target-pods {
@@ -827,47 +827,49 @@
         }
         
         .warning-box {
-            background: rgba(245, 158, 11, 0.1);
+            background: rgba(255, 184, 0, 0.1);
             border: 1px solid var(--accent-warning);
-            border-radius: 6px;
-            padding: 12px;
-            margin-top: 10px;
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin-top: 12px;
             color: var(--accent-warning);
-            font-size: 11px;
+            font-size: 12px;
         }
         
         .connectivity-grid {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
         }
         
         .connectivity-item {
-            padding: 6px;
+            padding: 8px;
             background: var(--bg-secondary);
-            border-radius: 4px;
+            border-radius: var(--radius-sm);
             font-size: 11px;
             color: var(--text-secondary);
+            border: 1px solid var(--border-color);
         }
         
         .connectivity-item strong {
             color: var(--text-primary);
         }
         
-        /* Diagnostic Styles */
+        /* Diagnostic */
         .diagnostic-container {
-            padding: 20px;
+            padding: 24px;
             overflow-y: auto;
-            max-height: calc(80vh - 60px);
+            max-height: calc(85vh - 80px);
         }
         
         .diagnostic-summary {
             display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding: 12px;
+            gap: 14px;
+            margin-bottom: 24px;
+            padding: 14px;
             background: var(--bg-secondary);
-            border-radius: 6px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
         }
         
         .summary-stat {
@@ -879,9 +881,10 @@
         
         .summary-stat strong {
             display: block;
-            font-size: 24px;
+            font-size: 28px;
             color: var(--accent-success);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            font-family: 'JetBrains Mono', monospace;
         }
         
         .summary-stat.error strong {
@@ -891,13 +894,13 @@
         .diagnostic-results-list {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
         
         .diagnostic-result {
             background: var(--bg-secondary);
-            padding: 12px;
-            border-radius: 6px;
+            padding: 14px;
+            border-radius: var(--radius-md);
             border-left: 3px solid var(--accent-success);
         }
         
@@ -906,98 +909,25 @@
         }
         
         .result-header {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--text-primary);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
         
         .result-message {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text-secondary);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
         
         .result-recommendation {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--accent-warning);
-            background: rgba(245, 158, 11, 0.1);
-            padding: 6px;
-            border-radius: 4px;
-            margin-top: 6px;
-        }
-        
-        .message {
-            margin-bottom: 12px;
-            padding: 10px 12px;
-            border-radius: 6px;
-            max-width: 85%;
-        }
-        
-        .message.user {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            margin-left: auto;
-        }
-        
-        .message.assistant {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-        }
-        
-        .message-content {
-            font-size: 13px;
-            line-height: 1.5;
-        }
-        
-        .chat-input {
-            padding-top: 10px;
-            border-top: 1px solid #eee;
-        }
-        
-        .input-group {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .input-group input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 2px solid var(--border-color);
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            border-radius: 20px;
-            font-size: 12px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        
-        .input-group input:focus {
-            border-color: var(--accent-primary);
-        }
-        
-        .input-group input::placeholder {
-            color: var(--text-muted);
-        }
-        
-        .send-button {
-            padding: 8px 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.15s;
-        }
-        
-        .send-button:hover {
-            transform: scale(1.02);
-        }
-        
-        .send-button:active {
-            transform: scale(0.98);
+            background: rgba(255, 184, 0, 0.1);
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            margin-top: 8px;
         }
     </style>
 </head>
@@ -1007,17 +937,17 @@
         <div class="top-bar">
             <!-- Header -->
             <div class="card header">
-                <h1>🤖 K8s AI Assistant</h1>
-                <p>Chat with your Kubernetes cluster in natural language</p>
+                <h1>🤖 K8s AI Operations Center</h1>
+                <p>Intelligent Kubernetes management and monitoring</p>
                 <div class="header-badges">
-                    <span class="status-badge offline" id="statusBadge">🔴 Offline</span>
-                    <span class="platform-badge" id="platformBadge" style="display: none;"></span>
+                    <span class="badge badge-offline" id="statusBadge"><span class="status-dot offline"></span> Offline</span>
+                    <span class="badge badge-info" id="platformBadge" style="display: none;"></span>
                 </div>
             </div>
             
             <!-- Cluster Stats -->
             <div class="card stats">
-                <h2>📊 Cluster Stats</h2>
+                <h2>Cluster Stats</h2>
                 <div class="stat-grid">
                     <div class="stat-item">
                         <span class="stat-value" id="podCount">-</span>
@@ -1036,29 +966,27 @@
             
             <!-- Foundry Controls -->
             <div class="card foundry">
-                <h2>🤖 Foundry Control</h2>
+                <h2>Foundry Control</h2>
                 <div id="foundryStatusText" class="foundry-status">Checking...</div>
                 <div id="foundryHelp" style="font-size: 11px; color: var(--text-secondary); margin: 8px 0; display: none;">
-                    💡 Select a model, then click Start. ✅ = Ready instantly | 📦 = Will download first
+                    💡 Select a model, then click Start
                 </div>
-                <select class="model-select" id="modelSelect" title="Select AI model to run" aria-label="Model selection">
+                <select class="model-select btn-secondary" id="modelSelect" title="Select AI model to run" aria-label="Model selection">
                     <option value="">Loading models...</option>
                 </select>
-                <div style="display: flex; gap: 8px;">
-                    <button class="control-button start" id="startBtn" onclick="startFoundry()">▶️ Start</button>
-                    <button class="control-button stop" id="stopBtn" onclick="stopFoundry()" style="display:none;">⏹️ Stop</button>
-                    <button class="control-button restart" id="restartBtn" onclick="restartFoundry()" style="display:none;">🔄 Restart</button>
-                    <button class="control-button" onclick="checkFoundryStatus()" style="font-size: 10px; padding: 4px 8px;" title="Refresh model list">🔄</button>
-                </div>
+                <button class="control-button btn start" id="startBtn" onclick="startFoundry()">▶️ Start</button>
+                <button class="control-button btn stop" id="stopBtn" onclick="stopFoundry()" style="display:none;">⏹️ Stop</button>
+                <button class="control-button btn restart" id="restartBtn" onclick="restartFoundry()" style="display:none;">🔄 Restart</button>
+                <button class="btn btn-secondary" onclick="checkFoundryStatus()" style="font-size: 11px; padding: 6px 10px; margin-top: 4px; width: 100%;" title="Refresh model list">🔄 Refresh</button>
             </div>
         </div>
         
-        <!-- Quick Actions Bar -->
-        <div class="card" style="padding: 12px; margin-bottom: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <h3 style="margin: 0; color: white; font-size: 1em; flex-shrink: 0;">⚡ Quick Actions:</h3>
+        <!-- Quick Actions -->
+        <div class="card quick-actions">
+            <h3>⚡ Quick Actions</h3>
+            <div class="actions-grid">
                 <button class="action-button" onclick="showAksArcDiagnostics()" title="Run cluster diagnostics and troubleshooting">
-                    🔍 Diagnostics & Logs
+                    🔍 Diagnostics
                 </button>
                 <button class="action-button" onclick="showTopology()" title="View cluster network topology">
                     🗺️ Network Topology
@@ -1076,7 +1004,7 @@
         <div class="card aksarc-panel" id="aksarcPanel" style="display: none;">
             <div class="aksarc-header">
                 <h2>☁️ AKS Arc Cluster</h2>
-                <button class="diagnostic-button" id="diagnosticsBtn" onclick="showAksArcDiagnostics()">🔍 Run Diagnostics</button>
+                <button class="btn diagnostic-button" id="diagnosticsBtn" onclick="showAksArcDiagnostics()">🔍 Run Diagnostics</button>
             </div>
             <div class="aksarc-info" id="aksarcInfo">
                 <div class="info-item">
@@ -1298,13 +1226,13 @@
                     startBtn.style.display = 'none';
                     stopBtn.style.display = 'none';
                     restartBtn.style.display = 'none';
-                    statusBadge.textContent = '🔴 Offline';
-                    statusBadge.className = 'status-badge offline';
+                    statusBadge.innerHTML = '<span class="status-dot offline"></span> Offline';
+                    statusBadge.className = 'badge badge-offline';
                 } else if (data.running) {
                     statusDiv.textContent = `🟢 Running: ${data.model || 'active'}`;
                     statusDiv.className = 'foundry-status running';
-                    statusBadge.textContent = '🟢 Online';
-                    statusBadge.className = 'status-badge online';
+                    statusBadge.innerHTML = '<span class="status-dot online"></span> Online';
+                    statusBadge.className = 'badge badge-online';
                     startBtn.style.display = 'none';
                     stopBtn.style.display = 'block';
                     restartBtn.style.display = 'block';
@@ -1313,10 +1241,12 @@
                     const helpDiv = document.getElementById('foundryHelp');
                     if (helpDiv) helpDiv.style.display = 'none';
                     
-                    // Set dropdown to show running model
+                    // Replace dropdown with status display when running
                     if (data.model && modelSelect) {
-                        modelSelect.value = data.model;
-                        modelSelect.disabled = true; // Disable while running
+                        modelSelect.innerHTML = `<option value="${data.model}" selected>⚡ Currently Running: ${data.model}</option>`;
+                        modelSelect.disabled = true;
+                        modelSelect.style.color = '#10b981';
+                        modelSelect.style.fontWeight = '600';
                     }
                     
                     // Populate models
@@ -1352,14 +1282,18 @@
                 } else {
                     statusDiv.textContent = '🔴 Foundry not running';
                     statusDiv.className = 'foundry-status stopped';
-                    statusBadge.textContent = '🔴 Offline';
-                    statusBadge.className = 'status-badge offline';
+                    statusBadge.innerHTML = '<span class="status-dot offline"></span> Offline';
+                    statusBadge.className = 'badge badge-offline';
                     startBtn.style.display = 'block';
                     stopBtn.style.display = 'none';
                     restartBtn.style.display = 'none';
                     
                     // Re-enable dropdown when stopped
-                    if (modelSelect) modelSelect.disabled = false;
+                    if (modelSelect) {
+                        modelSelect.disabled = false;
+                        modelSelect.style.color = '';
+                        modelSelect.style.fontWeight = '';
+                    }
                     
                     // Show help text
                     const helpDiv = document.getElementById('foundryHelp');
