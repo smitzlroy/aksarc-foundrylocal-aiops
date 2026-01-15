@@ -248,6 +248,21 @@ async def root():
     )
 
 
+@app.get("/modern-theme.css")
+async def serve_css():
+    """Serve the CSS file."""
+    css_path = Path(__file__).parent.parent.parent / "modern-theme.css"
+    return FileResponse(
+        css_path,
+        media_type="text/css",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
 
